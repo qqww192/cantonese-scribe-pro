@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, ArrowRight, Languages, FileAudio } from "lucide-react";
 import heroImage from "@/assets/hero-image.jpg";
+import FileUpload from "@/components/FileUpload";
 
 const HeroSection = () => {
   return (
@@ -28,16 +29,22 @@ const HeroSection = () => {
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="font-ui group">
-                Start Transcribing
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </Button>
+            {/* File Upload Section */}
+            <div className="space-y-4">
+              <div className="text-center lg:text-left">
+                <h2 className="text-2xl font-bold font-ui mb-2">
+                  Ready to get started?
+                </h2>
+                <p className="text-muted-foreground font-ui mb-4">
+                  Upload your Cantonese audio or video files and receive accurate transcriptions 
+                  in minutes, not hours.
+                </p>
+                <p className="text-sm text-muted-foreground font-ui">
+                  <span className="font-medium">Note:</span> Files must be 25 MB or below
+                </p>
+              </div>
               
-              <Button variant="outline" size="lg" className="font-ui">
-                <Play className="mr-2 h-5 w-5" />
-                Watch Demo
-              </Button>
+              <FileUpload />
             </div>
 
             {/* Features Preview */}
