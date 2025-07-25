@@ -1,22 +1,31 @@
-// src/components/LoginPage.tsx
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-export const LoginPage = () => {
+const LoginPage = () => {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    firstName: '',
-    lastName: '',
     agreeToTerms: false
   });
-  const { toast } = useToast();
+
+  const toggleMode = () => {
+    setIsLogin(!isLogin);
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      agreeToTerms: false
+    });
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -26,100 +35,27 @@ export const LoginPage = () => {
     }));
   };
 
-  const validateEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
-  const validateForm = () => {
-    if (!formData.email || !validateEmail(formData.email)) {
-      toast({
-        title: "Invalid email",
-        description: "Please enter a valid email address.",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    if (!formData.password || formData.password.length < 6) {
-      toast({
-        title: "Password too short",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    if (!isLogin) {
-      if (!formData.firstName || !formData.lastName) {
-        toast({
-          title: "Missing information",
-          description: "Please fill in your first and last name.",
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        toast({
-          title: "Password mismatch",
-          description: "Passwords do not match.",
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      if (!formData.agreeToTerms) {
-        toast({
-          title: "Terms agreement required",
-          description: "Please agree to the terms and conditions.",
-          variant: "destructive"
-        });
-        return false;
-      }
-    }
-
-    return true;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      if (isLogin) {
-        toast({
-          title: "Login successful! 🎉",
-          description: "Welcome back to CantoneseScribe!",
-        });
-      } else {
-        toast({
-          title: "Account created! 🎉",
-          description: "Welcome to CantoneseScribe! Please check your email to verify your account.",
-        });
-      }
-      setIsLoading(false);
+    try {
+      // Your authentication logic here
+      // For demonstration, we'll simulate a successful login
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Here you would redirect to dashboard or main app
-      // window.location.href = '/dashboard';
-    }, 1500);
-  };
-
-  const toggleMode = () => {
-    setIsLogin(!isLogin);
-    setFormData({
-      email: '',
-      password: '',
-      confirmPassword: '',
-      firstName: '',
-      lastName: '',
-      agreeToTerms: false
-    });
+      // Set authentication token (replace with your actual token)
+      localStorage.setItem('authToken', 'your-auth-token');
+      
+      // Navigate to dashboard
+      navigate('/dashboard');
+      
+    } catch (error) {
+      console.error('Login failed:', error);
+      // Handle error - you might want to show a toast or error message
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -127,89 +63,49 @@ export const LoginPage = () => {
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          {/* Logo */}
-          <div className="flex justify-center mb-6">
-            <div className="flex items-center gap-3">
-              <img 
-                src="/src/assets/logo.png" 
-                alt="CantoneseScribe Logo" 
-                className="w-12 h-12 object-contain"
-              />
-              <div className="text-2xl font-semibold text-gray-900">CantoneseScribe</div>
-            </div>
-          </div>
-          
-          <h2 className="text-3xl font-bold text-gray-900">
-            {isLogin ? 'Welcome back!' : 'Create your account'}
+          <img 
+            src="/src/assets/logo.png" 
+            alt="CantoneseScribe Logo" 
+            className="mx-auto w-12 h-12 object-contain"
+          />
+          <h2 className="mt-6 text-3xl font-bold text-gray-900">
+            {isLogin ? 'Sign in to your account' : 'Create your account'}
           </h2>
           <p className="mt-2 text-sm text-gray-600">
             {isLogin 
-              ? 'Sign in to continue your Cantonese learning journey'
-              : 'Join thousands of learners mastering Cantonese with AI'
+              ? 'Welcome back to CantoneseScribe'
+              : 'Start transcribing Cantonese content today'
             }
           </p>
         </div>
 
-        {/* Login/Register Form */}
-        <Card className="shadow-lg border-0">
-          <CardHeader className="pb-4">
-            <div className="flex">
-              <button
-                onClick={() => !isLogin && toggleMode()}
-                className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  isLogin 
-                    ? 'border-orange-500 text-orange-600' 
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => isLogin && toggleMode()}
-                className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  !isLogin 
-                    ? 'border-orange-500 text-orange-600' 
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Sign Up
-              </button>
-            </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>{isLogin ? 'Sign In' : 'Create Account'}</CardTitle>
+            <CardDescription>
+              {isLogin 
+                ? 'Enter your credentials to access your account'
+                : 'Fill out the form below to get started'
+              }
+            </CardDescription>
           </CardHeader>
-
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Name fields for registration */}
+              {/* Name field for registration */}
               {!isLogin && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                      First Name
-                    </label>
-                    <Input
-                      id="firstName"
-                      name="firstName"
-                      type="text"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      placeholder="John"
-                      className="border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                      Last Name
-                    </label>
-                    <Input
-                      id="lastName"
-                      name="lastName"
-                      type="text"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      placeholder="Doe"
-                      className="border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                    />
-                  </div>
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name
+                  </label>
+                  <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="John Doe"
+                    className="border-gray-300 focus:border-orange-500 focus:ring-orange-500"
+                  />
                 </div>
               )}
 
