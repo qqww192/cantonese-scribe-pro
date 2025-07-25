@@ -1,98 +1,89 @@
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Play, ArrowRight, Languages, FileAudio } from "lucide-react";
-import heroImage from "@/assets/hero-image.jpg";
-import FileUpload from "@/components/FileUpload";
+// src/components/HeroSection.tsx
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
-const HeroSection = () => {
+export const HeroSection = () => {
+  const [url, setUrl] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
+
+  const handleConvert = async () => {
+    if (!url.trim()) {
+      toast({
+        title: "Please enter a YouTube URL",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Basic URL validation
+    if (!url.includes('youtube.com') && !url.includes('youtu.be') && !url.includes('vimeo.com')) {
+      toast({
+        title: "Please enter a valid YouTube or Vimeo URL",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    // Simulate processing
+    setTimeout(() => {
+      toast({
+        title: "Demo: Video processing complete! 🎉",
+        description: "You would receive: ✅ Chinese characters ✅ Yale romanisation ✅ Jyutping romanisation ✅ SRT/VTT files ✅ Synchronized timestamps"
+      });
+      setIsProcessing(false);
+      setUrl('');
+    }, 2500);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleConvert();
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUrl(value);
+  };
+
   return (
-    <section className="relative bg-gradient-to-br from-background to-muted py-20 lg:py-32 overflow-hidden">
-      <div className="container mx-auto px-4">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Column - Content */}
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <Badge variant="secondary" className="font-ui">
-                <Languages className="mr-2 h-4 w-4" />
-                AI-Powered Transcription
-              </Badge>
-              
-              <h1 className="text-4xl lg:text-6xl font-bold font-ui text-foreground leading-tight">
-                Transcribe Cantonese with
-                <span className="text-primary"> Precision</span>
-              </h1>
-              
-              <p className="text-lg lg:text-xl text-muted-foreground font-ui max-w-lg">
-                Professional transcription of Cantonese audio and video into Chinese characters, 
-                Yale romanisation, and Jyutping romanisation. Perfect for educators, linguists, 
-                and language learners.
-              </p>
-            </div>
-
-            {/* File Upload Section */}
-            <div className="space-y-4">
-              <div className="text-center lg:text-left">
-                <h2 className="text-2xl font-bold font-ui mb-2">
-                  Ready to get started?
-                </h2>
-                <p className="text-muted-foreground font-ui mb-4">
-                  Upload your Cantonese audio or video files and receive accurate transcriptions 
-                  in minutes, not hours.
-                </p>
-                <p className="text-sm text-muted-foreground font-ui">
-                  <span className="font-medium">Note:</span> Files must be 25 MB or below
-                </p>
-              </div>
-              
-              <FileUpload />
-            </div>
-
-            {/* Features Preview */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-8">
-              <div className="text-center sm:text-left">
-                <div className="text-2xl font-bold text-primary font-ui">3</div>
-                <div className="text-sm text-muted-foreground font-ui">Output Formats</div>
-              </div>
-              <div className="text-center sm:text-left">
-                <div className="text-2xl font-bold text-accent font-ui">AI</div>
-                <div className="text-sm text-muted-foreground font-ui">Powered Engine</div>
-              </div>
-              <div className="text-center sm:text-left">
-                <div className="text-2xl font-bold text-success font-ui">95%</div>
-                <div className="text-sm text-muted-foreground font-ui">Accuracy Rate</div>
-              </div>
-            </div>
+    <section className="bg-white py-20">
+      <div className="max-w-6xl mx-auto px-5 text-center">
+        <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+          Accurately Convert YouTube Videos to Cantonese Transcription
+        </h1>
+        <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
+          Get Chinese characters, Yale romanisation, and Jyutping romanisation with synchronized timestamps
+        </p>
+        
+        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-12 max-w-3xl mx-auto hover:border-orange-500 transition-colors">
+          <div className="flex gap-3 mb-6">
+            <Input
+              type="url"
+              placeholder="Paste YouTube URL here (e.g., https://youtube.com/watch?v=...)"
+              value={url}
+              onChange={handleInputChange}
+              onKeyPress={handleKeyPress}
+              className="flex-1 h-12 px-5 text-base border-gray-300 focus:border-orange-500 focus:ring-orange-500"
+            />
+            <Button
+              onClick={handleConvert}
+              disabled={isProcessing}
+              className="h-12 px-8 bg-orange-500 hover:bg-orange-600 text-white font-semibold"
+            >
+              {isProcessing ? 'Processing...' : 'Convert Now'}
+            </Button>
           </div>
-
-          {/* Right Column - Hero Image */}
-          <div className="relative">
-            <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-              <img
-                src={heroImage}
-                alt="Cantonese transcription interface showing audio waveforms and Chinese characters"
-                className="w-full h-auto object-cover"
-              />
-              
-              {/* Floating Elements */}
-              <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
-                <FileAudio className="h-6 w-6 text-primary" />
-              </div>
-              
-              <div className="absolute bottom-4 right-4 bg-card/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
-                <div className="text-sm font-medium font-transcription">
-                  粵語 → Yale → Jyutping
-                </div>
-              </div>
-            </div>
-
-            {/* Background Decoration */}
-            <div className="absolute -top-8 -right-8 w-32 h-32 bg-primary/20 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-accent/20 rounded-full blur-2xl"></div>
-          </div>
+          <p className="text-sm text-gray-600">
+            Supports YouTube, Vimeo and direct video links • Free: 5 minutes per month
+          </p>
         </div>
       </div>
     </section>
   );
 };
-
-export default HeroSection;

@@ -1,27 +1,42 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+// src/App.tsx (or your main routing file)
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Header } from '@/components/Header';
+import { HeroSection } from '@/components/HeroSection';
+import { HowItWorks } from '@/components/HowItWorks';
+import { Features } from '@/components/Features';
+import { Footer } from '@/components/Footer';
+import PricingPage from '@/components/PricingPage';
+import LoginPage from '@/components/LoginPage';
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <Router>
+      <Routes>
+        {/* Homepage */}
+        <Route path="/" element={
+          <div className="min-h-screen bg-gray-50">
+            <Header />
+            <HeroSection />
+            <HowItWorks />
+            <Features />
+            <Footer />
+          </div>
+        } />
+        
+        {/* Pricing page */}
+        <Route path="/pricing" element={
+          <div className="min-h-screen bg-gray-50">
+            <Header />
+            <PricingPage />
+            <Footer />
+          </div>
+        } />
+        
+        {/* Login page - no header/footer for cleaner look */}
+        <Route path="/auth" element={<LoginPage />} />
+      </Routes>
+    </Router>
+  );
+}
 
 export default App;
