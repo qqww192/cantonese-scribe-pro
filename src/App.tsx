@@ -1,4 +1,4 @@
-// src/App.tsx - Clean version (replace your entire file with this)
+// src/App.tsx - Updated with learning features
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
@@ -12,6 +12,38 @@ import { UsagePage } from '@/pages/dashboard/UsagePage';
 import { SavedFilesPage } from '@/pages/dashboard/SavedFilesPage';
 import { SettingsPage } from '@/pages/dashboard/SettingsPage';
 import { DashboardHomePage } from '@/pages/dashboard/DashboardHomePage';
+import { FlashcardGamesPage } from '@/pages/dashboard/FlashcardGamesPage';
+import { VocabularyPage } from '@/pages/dashboard/VocabularyPage';
+import { PronunciationPage } from '@/pages/dashboard/PronunciationPage';
+import { AnalyticsPage } from '@/pages/dashboard/AnalyticsPage';
+
+// Placeholder components for remaining features
+const AdaptiveLearningPage = () => (
+  <div className="space-y-6">
+    <h1 className="text-3xl font-bold tracking-tight">Adaptive Learning</h1>
+    <p className="text-muted-foreground">
+      AI-powered adaptive difficulty system - Coming soon!
+    </p>
+  </div>
+);
+
+const ExportPage = () => (
+  <div className="space-y-6">
+    <h1 className="text-3xl font-bold tracking-tight">Export & Integration</h1>
+    <p className="text-muted-foreground">
+      Export to Anki, Quizlet, and other platforms - Coming soon!
+    </p>
+  </div>
+);
+
+const SpacedRepetitionPage = () => (
+  <div className="space-y-6">
+    <h1 className="text-3xl font-bold tracking-tight">Spaced Repetition</h1>
+    <p className="text-muted-foreground">
+      Intelligent spaced repetition scheduling - Coming soon!
+    </p>
+  </div>
+);
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -70,10 +102,20 @@ function App() {
             <DashboardLayout />
           </ProtectedRoute>
         }>
+          {/* Core Dashboard Pages */}
           <Route index element={<DashboardHomePage />} />
           <Route path="usage" element={<UsagePage />} />
           <Route path="files" element={<SavedFilesPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          
+          {/* Learning Feature Pages */}
+          <Route path="flashcards" element={<FlashcardGamesPage />} />
+          <Route path="vocabulary" element={<VocabularyPage />} />
+          <Route path="pronunciation" element={<PronunciationPage />} />
+          <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="adaptive" element={<AdaptiveLearningPage />} />
+          <Route path="export" element={<ExportPage />} />
+          <Route path="spaced-repetition" element={<SpacedRepetitionPage />} />
         </Route>
 
         {/* Catch all route */}

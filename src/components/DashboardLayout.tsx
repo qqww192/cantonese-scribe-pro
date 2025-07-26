@@ -1,4 +1,4 @@
-// src/components/DashboardLayout.tsx
+// src/components/DashboardLayout.tsx - Enhanced with learning features
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -15,12 +15,20 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { 
+  Home,
   BarChart3, 
   FileText, 
   Settings, 
   LogOut, 
   User,
-  ChevronRight 
+  ChevronRight,
+  Gamepad2,
+  Brain,
+  Mic,
+  TrendingUp,
+  Target,
+  Download,
+  RotateCcw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,31 +50,86 @@ const DashboardLayout = () => {
   });
 
   const handleSignOut = () => {
-    // Clear authentication state (implement your logout logic here)
     localStorage.removeItem('authToken');
     navigate('/auth');
   };
 
-  const menuItems = [
+  const coreMenuItems = [
+    {
+      title: "Home",
+      icon: Home,
+      path: "/dashboard",
+      description: "Dashboard overview"
+    },
     {
       title: "Usage",
       icon: BarChart3,
       path: "/dashboard/usage",
-      description: "View your transcription usage and analytics"
+      description: "View your transcription usage"
     },
     {
       title: "Saved Files",
       icon: FileText,
       path: "/dashboard/files",
       description: "Access your saved transcriptions"
+    }
+  ];
+
+  const learningMenuItems = [
+    {
+      title: "Flashcard Games",
+      icon: Gamepad2,
+      path: "/dashboard/flashcards",
+      description: "AI-powered flashcard games"
     },
+    {
+      title: "Vocabulary",
+      icon: Brain,
+      path: "/dashboard/vocabulary",
+      description: "Smart vocabulary categorisation"
+    },
+    {
+      title: "Pronunciation",
+      icon: Mic,
+      path: "/dashboard/pronunciation",
+      description: "Practice with AI feedback"
+    },
+    {
+      title: "Analytics",
+      icon: TrendingUp,
+      path: "/dashboard/analytics",
+      description: "Learning progress analytics"
+    },
+    {
+      title: "Adaptive Learning",
+      icon: Target,
+      path: "/dashboard/adaptive",
+      description: "Adaptive difficulty system"
+    },
+    {
+      title: "Export",
+      icon: Download,
+      path: "/dashboard/export",
+      description: "Anki/Quizlet integration"
+    },
+    {
+      title: "Spaced Repetition",
+      icon: RotateCcw,
+      path: "/dashboard/spaced-repetition",
+      description: "Spaced repetition scheduling"
+    }
+  ];
+
+  const settingsMenuItems = [
     {
       title: "Settings",
       icon: Settings,
       path: "/dashboard/settings",
-      description: "Manage your account and preferences"
+      description: "Manage your account preferences"
     }
   ];
+
+  const allMenuItems = [...coreMenuItems, ...learningMenuItems, ...settingsMenuItems];
 
   return (
     <SidebarProvider>
@@ -85,12 +148,60 @@ const DashboardLayout = () => {
               </div>
             </div>
 
-            {/* Navigation Menu */}
+            {/* Core Navigation */}
             <SidebarGroup>
-              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+              <SidebarGroupLabel>Core</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {menuItems.map((item) => (
+                  {coreMenuItems.map((item) => (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        onClick={() => navigate(item.path)}
+                        isActive={location.pathname === item.path}
+                        className="w-full justify-start"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                        {location.pathname === item.path && (
+                          <ChevronRight className="ml-auto h-4 w-4" />
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* Learning Features Navigation */}
+            <SidebarGroup>
+              <SidebarGroupLabel>Learning Features</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {learningMenuItems.map((item) => (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        onClick={() => navigate(item.path)}
+                        isActive={location.pathname === item.path}
+                        className="w-full justify-start"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                        {location.pathname === item.path && (
+                          <ChevronRight className="ml-auto h-4 w-4" />
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* Settings Navigation */}
+            <SidebarGroup>
+              <SidebarGroupLabel>Account</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {settingsMenuItems.map((item) => (
                     <SidebarMenuItem key={item.path}>
                       <SidebarMenuButton
                         onClick={() => navigate(item.path)}
@@ -154,7 +265,7 @@ const DashboardLayout = () => {
                 <>
                   <span className="text-muted-foreground">/</span>
                   <span className="text-muted-foreground">
-                    {menuItems.find(item => item.path === location.pathname)?.title || 
+                    {allMenuItems.find(item => item.path === location.pathname)?.title || 
                      location.pathname.split('/').pop()}
                   </span>
                 </>
