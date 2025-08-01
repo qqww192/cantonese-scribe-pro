@@ -1,10 +1,12 @@
 // src/components/PricingPage.tsx
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const PricingPage = () => {
   const [isAnnual, setIsAnnual] = useState(false);
+  const navigate = useNavigate();
 
   const plans = [
     {
@@ -17,14 +19,13 @@ export const PricingPage = () => {
       romanization: "Chinese + Yale OR Jyutping",
       exports: "Basic TXT format",
       processing: "Standard processing",
-      support: "Community support",
+      support: "No support",
       features: [
         "3 YouTube videos per month",
         "10 minutes max per video", 
-        "Basic romanisation (choose Yale or Jyutping)",
-        "Chinese characters included",
+        "Basic subtitle (choose Yale or Jyutping or Chinese)",
+        "English included",
         "TXT export only",
-        "Standard video player"
       ],
       buttonText: "Start Free",
       buttonStyle: "outline",
@@ -35,52 +36,20 @@ export const PricingPage = () => {
       description: "For serious Cantonese learners",
       monthlyPrice: 9.99,
       annualPrice: 79.99,
-      videoLimit: "30 videos per month",
+      videoLimit: "25 videos per month",
       videoLength: "Up to 1 hour each",
       romanization: "Chinese + Yale + Jyutping (all formats)",
       exports: "SRT, VTT, TXT, CSV formats",
       processing: "Priority processing",
       support: "Email support",
       features: [
-        "30 YouTube videos per month",
+        "25 YouTube videos per month",
         "Up to 1 hour per video",
-        "Dual romanisation (Yale + Jyutping + Chinese)",
-        "Advanced learning controls (speed, repeat, bookmarks)",
+        "Dual romanisation (Yale + Jyutping + Chinese + English)",
         "All export formats (SRT, VTT, TXT, CSV)",
-        "Synchronized video player",
-        "Vocabulary highlighting", 
-        "Progress tracking",
         "Priority processing (3x faster)"
       ],
       buttonText: "Start Learning",
-      buttonStyle: "default",
-      popular: false
-    },
-    {
-      name: "Learner Master",
-      description: "For advanced learners who want mastery tools",
-      monthlyPrice: 19.99,
-      annualPrice: 159.99,
-      videoLimit: "Unlimited videos + AI learning tools",
-      videoLength: "Up to 2 hours each",
-      romanization: "Chinese + Yale + Jyutping + AI vocabulary analysis",
-      exports: "All formats + Flashcards + Games",
-      processing: "AI-powered learning features",
-      support: "Priority support + Learning analytics",
-      features: [
-        "Everything in Learner Pro",
-        "Unlimited videos up to 2 hours each",
-        "🎮 AI-powered flashcard games",
-        "🧠 Smart vocabulary categorisation by difficulty",
-        "🗣️ Pronunciation practice with AI feedback",
-        "📊 Personalised learning analytics",
-        "🎯 Adaptive difficulty based on progress",
-        "💾 Anki/Quizlet export integration",
-        "⚡ Priority processing (5x faster)",
-        "📱 Mobile app access (coming soon)",
-        "🔄 Spaced repetition scheduling"
-      ],
-      buttonText: "Master Cantonese",
       buttonStyle: "default",
       popular: true
     }
@@ -96,7 +65,7 @@ export const PricingPage = () => {
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
             Transform YouTube videos into interactive Cantonese learning experiences. 
-            Plans designed for learners with AI-powered tools, games, and mastery features.
+            Plans designed for learners with AI-powered tools and mastery features.
           </p>
           
           {/* Annual/Monthly Toggle */}
@@ -128,7 +97,7 @@ export const PricingPage = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid lg:grid-cols-2 gap-8 mb-16 max-w-4xl mx-auto">
           {plans.map((plan, index) => (
             <Card 
               key={plan.name} 
@@ -136,72 +105,50 @@ export const PricingPage = () => {
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-orange-500 text-white px-4 py-1 text-sm font-medium rounded-full">
+                  <span className="bg-orange-500 text-white px-4 py-1 rounded-full text-sm font-medium">
                     Most Popular
                   </span>
                 </div>
               )}
               
               <CardHeader className="text-center pb-4">
-                <CardTitle className="text-xl font-bold text-gray-900 mb-2">
+                <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
                   {plan.name}
                 </CardTitle>
-                <p className="text-gray-600 text-sm mb-4">{plan.description}</p>
-                
-                <div className="mb-4">
-                  {plan.monthlyPrice === 0 ? (
-                    <span className="text-3xl font-bold text-gray-900">Free</span>
-                  ) : (
-                    <>
-                      <span className="text-3xl font-bold text-gray-900">
-                        ${isAnnual ? (plan.annualPrice / 12).toFixed(2) : plan.monthlyPrice}
-                      </span>
-                      <span className="text-gray-600 ml-1">/month</span>
-                      {isAnnual && plan.monthlyPrice > 0 && (
-                        <div className="text-sm text-green-600 mt-1">
-                          Billed ${plan.annualPrice} annually
-                        </div>
-                      )}
-                    </>
+                <p className="text-gray-600 text-sm mb-4">
+                  {plan.description}
+                </p>
+                <div className="text-center">
+                  <span className="text-4xl font-bold text-gray-900">
+                    £{plan.monthlyPrice === 0 ? '0' : (isAnnual ? (plan.annualPrice / 12).toFixed(2) : plan.monthlyPrice)}
+                  </span>
+                  <span className="text-gray-600 ml-1">
+                    /{isAnnual ? 'month' : 'month'}
+                  </span>
+                  {isAnnual && plan.annualPrice > 0 && (
+                    <div className="text-sm text-gray-500 mt-1">
+                      £{plan.annualPrice}/year (billed annually)
+                    </div>
                   )}
                 </div>
-
+              </CardHeader>
+              
+              <CardContent className="pt-0">
                 <Button 
-                  className={`w-full ${
-                    plan.buttonStyle === 'default' 
-                      ? 'bg-orange-500 hover:bg-orange-600 text-white' 
-                      : plan.name === 'Free' 
-                        ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                        : 'border-orange-500 text-orange-500 hover:bg-orange-50'
+                  className={`w-full mb-6 ${
+                    plan.buttonStyle === 'outline' 
+                      ? 'border-orange-500 text-orange-500 hover:bg-orange-50' 
+                      : 'bg-orange-500 hover:bg-orange-600 text-white'
                   }`}
-                  variant={plan.buttonStyle === 'default' ? 'default' : 'outline'}
+                  variant={plan.buttonStyle === 'outline' ? 'outline' : 'default'}
                 >
                   {plan.buttonText}
                 </Button>
-              </CardHeader>
-
-              <CardContent className="pt-0">
-                {/* Quick Stats */}
-                <div className="space-y-3 mb-6 p-4 bg-gray-50 rounded-lg">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Video Limit:</span>
-                    <span className="font-medium text-gray-900">{plan.videoLimit}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Video Length:</span>
-                    <span className="font-medium text-gray-900">{plan.videoLength}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Romanisation:</span>
-                    <span className="font-medium text-gray-900">{plan.romanization}</span>
-                  </div>
-                </div>
-
-                {/* Features List */}
+                
                 <ul className="space-y-3">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  {plan.features.map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-start">
+                      <svg className="flex-shrink-0 w-5 h-5 text-green-500 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                       <span className="text-sm text-gray-700">{feature}</span>
@@ -218,21 +165,16 @@ export const PricingPage = () => {
           <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
             Calculate Your Monthly Usage
           </h3>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <div className="text-center">
               <div className="text-3xl font-bold text-orange-500 mb-2">~30 min</div>
               <div className="text-gray-600">Free Plan</div>
               <div className="text-sm text-gray-500 mt-1">3 videos × 10 min each</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-orange-500 mb-2">30 hours</div>
+              <div className="text-3xl font-bold text-orange-500 mb-2">25 hours</div>
               <div className="text-gray-600">Learner Pro</div>
-              <div className="text-sm text-gray-500 mt-1">30 videos × 1 hour each</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-orange-500 mb-2">Unlimited+</div>
-              <div className="text-gray-600">Learner Master</div>
-              <div className="text-sm text-gray-500 mt-1">Videos up to 2 hours + AI learning tools</div>
+              <div className="text-sm text-gray-500 mt-1">25 videos × 1 hour each</div>
             </div>
           </div>
         </div>
@@ -249,15 +191,15 @@ export const PricingPage = () => {
             </div>
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">What learning tools are included?</h4>
-              <p className="text-gray-600 text-sm">Learner Master includes AI flashcard games, vocabulary categorisation, pronunciation practice, and spaced repetition.</p>
+              <p className="text-gray-600 text-sm">Learner Pro includes vocabulary highlighting, priority processing, and all export formats for comprehensive learning.</p>
             </div>
             <div>
               <h4 className="font-semibold text-gray-900 mb-2">Can I cancel anytime?</h4>
               <p className="text-gray-600 text-sm">Yes, cancel anytime. No commitments. Your plan remains active until the end of your billing period.</p>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-900 mb-2">How does AI vocabulary categorisation work?</h4>
-              <p className="text-gray-600 text-sm">Our AI analyses words from your videos and groups them by difficulty, frequency, and learning priority for efficient study.</p>
+              <h4 className="font-semibold text-gray-900 mb-2">How does vocabulary highlighting work?</h4>
+              <p className="text-gray-600 text-sm">Our system identifies key vocabulary words in your transcriptions and highlights them to help focus your learning on important terms.</p>
             </div>
           </div>
         </div>
