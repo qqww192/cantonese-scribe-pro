@@ -8,6 +8,7 @@ import PricingPage from '@/components/PricingPage';
 import LoginPage from '@/components/LoginPage';
 import HistoryPage from '@/components/HistoryPage';
 import SettingsPage from '@/components/SettingsPage';
+import CreditsPage from '@/components/CreditsPage';
 import VideoProcessPage from '@/components/VideoProcessPage';
 
 // Protected Route Component
@@ -63,6 +64,16 @@ function App() {
         <Route path="/auth" element={<LoginPage />} />
 
         {/* Protected Routes - No Dashboard */}
+        <Route path="/credits" element={
+          <ProtectedRoute>
+            <div className="min-h-screen bg-gray-50">
+              <Header />
+              <CreditsPage />
+              <Footer />
+            </div>
+          </ProtectedRoute>
+        } />
+
         <Route path="/history" element={
           <ProtectedRoute>
             <div className="min-h-screen bg-gray-50">

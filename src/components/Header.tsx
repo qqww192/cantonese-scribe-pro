@@ -56,6 +56,14 @@ export const Header = () => {
 
           {/* Navigation */}
           <div className="flex items-center gap-6">
+            {/* Home - always visible */}
+            <button
+              onClick={() => navigate('/')}
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Home
+            </button>
+
             {/* Pricing - always visible */}
             <button
               onClick={() => navigate('/pricing')}
@@ -67,12 +75,15 @@ export const Header = () => {
             {isAuthenticated ? (
               /* After Login Navigation */
               <>
-                <div className="flex items-center gap-1">
-                  <span className="text-sm text-gray-600">Credits</span>
+                <button
+                  onClick={() => navigate('/credits')}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  <span>Credits</span>
                   <Badge variant="secondary" className="bg-green-100 text-green-800">
                     {credits}
                   </Badge>
-                </div>
+                </button>
                 
                 <button
                   onClick={() => navigate('/history')}
