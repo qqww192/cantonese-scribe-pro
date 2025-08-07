@@ -6,7 +6,10 @@ import { Badge } from '@/components/ui/badge';
 export const Header = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [credits, setCredits] = useState(5); // Mock credits
+  const [userUsage, setUserUsage] = useState({
+    videosProcessed: 8,
+    totalMinutes: 127
+  });
 
   useEffect(() => {
     // Check authentication status on mount and when storage changes
@@ -76,13 +79,18 @@ export const Header = () => {
               /* After Login Navigation */
               <>
                 <button
-                  onClick={() => navigate('/credits')}
+                  onClick={() => navigate('/usage')}
                   className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                  <span>Credits</span>
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">
-                    {credits}
-                  </Badge>
+                  <span>Usage</span>
+                  <div className="flex items-center gap-1">
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                      {userUsage.videosProcessed} videos
+                    </Badge>
+                    <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                      {userUsage.totalMinutes}m
+                    </Badge>
+                  </div>
                 </button>
                 
                 <button

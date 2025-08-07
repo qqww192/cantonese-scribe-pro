@@ -5,87 +5,98 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
   Clock, 
-  CreditCard, 
+  VideoIcon, 
   Package,
   CheckCircle,
   AlertCircle,
-  History
+  History,
+  ShoppingCart,
+  PlayCircle
 } from "lucide-react";
 
-const CreditsPage = () => {
-  // Mock user data
-  const [userCredits, setUserCredits] = useState({
-    current: 5,
-    monthlyLimit: 25,
-    totalUsed: 8,
-    minutesUsed: 127,
-    minutesLimit: 1500, // 25 hours
-    plan: "Learner Pro"
+const UsagePage = () => {
+  // Mock user usage data
+  const [userUsage, setUserUsage] = useState({
+    videosProcessed: 8,
+    totalMinutes: 127,
+    monthlyVideoLimit: 25,
+    monthlyMinuteLimit: 1500, // 25 hours
+    plan: "Learner Pro",
+    availableMinutes: 1373 // 1500 - 127
   });
 
-  // Transcription packages
+  // Transcription packages based on time
   const packages = [
     {
       id: 'package-30min',
-      duration: '30 minutes',
-      credits: 5,
+      duration: 30,
       price: 1.5,
       popular: false,
-      description: 'Perfect for short videos and clips'
+      description: 'Perfect for short videos and clips',
+      estimatedVideos: '5-10 videos'
     },
     {
-      id: 'package-1hour',
-      duration: '1 hour',
-      credits: 10,
+      id: 'package-60min',
+      duration: 60,
       price: 2.5,
       popular: true,
-      description: 'Great for medium-length content'
+      description: 'Great for medium-length content',
+      estimatedVideos: '10-20 videos'
     },
     {
-      id: 'package-1.5hour',
-      duration: '1.5 hours',
-      credits: 15,
+      id: 'package-90min',
+      duration: 90,
       price: 3.0,
       popular: false,
-      description: 'Best value for longer videos'
+      description: 'Best value for longer videos',
+      estimatedVideos: '15-30 videos'
     }
   ];
 
-  // Recent credit transactions
-  const creditHistory = [
+  // Recent processing history
+  const processingHistory = [
     {
       id: 1,
-      type: 'used',
-      amount: -1,
-      description: 'Hong Kong News Broadcast',
+      type: 'processed',
+      title: 'Hong Kong News Broadcast',
+      duration: 4.53, // 4:32 in minutes
       date: '2024-01-15T14:30:00',
-      duration: '4:32'
+      url: 'https://youtube.com/watch?v=TlC0SSeRNXc'
     },
     {
       id: 2,
-      type: 'used',
-      amount: -2,
-      description: 'Cantonese Conversation Practice',
+      type: 'processed',
+      title: 'Cantonese Conversation Practice',
+      duration: 12.25, // 12:15 in minutes
       date: '2024-01-14T10:15:00',
-      duration: '12:15'
+      url: 'https://youtube.com/watch?v=abc123'
     },
     {
       id: 3,
       type: 'purchased',
-      amount: 10,
-      description: '1 Hour Transcription Package',
+      title: '1 Hour Transcription Package',
+      duration: 60,
       date: '2024-01-13T16:20:00',
       price: '£2.50'
     },
     {
       id: 4,
-      type: 'used',
-      amount: -1,
-      description: 'Traditional Cantonese Song',
+      type: 'processed',
+      title: 'Traditional Cantonese Song',
+      duration: 3.75, // 3:45 in minutes
       date: '2024-01-12T16:20:00',
-      duration: '3:45'
+      url: 'https://youtube.com/watch?v=xyz789'
     }
   ];
+
+  const formatMinutes = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -101,55 +112,46 @@ const CreditsPage = () => {
   const handlePurchase = (packageItem: typeof packages[0]) => {
     // Simulate purchase process
     const confirmed = confirm(
-      `Purchase ${packageItem.duration} transcription package for £${packageItem.price}?\n\n` +
-      `You will receive ${packageItem.credits} credits.`
+      `Purchase ${packageItem.duration} minutes transcription package for £${packageItem.price}?\n\n` +
+      `You will receive ${packageItem.duration} minutes of transcription time.\n` +
+      `Estimated: ${packageItem.estimatedVideos}`
     );
     
     if (confirmed) {
-      setUserCredits(prev => ({
+      setUserUsage(prev => ({
         ...prev,
-        current: prev.current + packageItem.credits
+        availableMinutes: prev.availableMinutes + packageItem.duration,
+        monthlyMinuteLimit: prev.monthlyMinuteLimit + packageItem.duration
       }));
       
-      alert(`Successfully purchased ${packageItem.duration} package!\n${packageItem.credits} credits added to your account.`);
+      alert(`Successfully purchased ${packageItem.duration} minutes package!\n${packageItem.duration} minutes added to your account.`);
     }
   };
 
-  const creditUsagePercentage = (userCredits.totalUsed / userCredits.monthlyLimit) * 100;
-  const minutesUsagePercentage = (userCredits.minutesUsed / userCredits.minutesLimit) * 100;
+  const videoUsagePercentage = (userUsage.videosProcessed / userUsage.monthlyVideoLimit) * 100;
+  const minuteUsagePercentage = (userUsage.totalMinutes / userUsage.monthlyMinuteLimit) * 100;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Credits & Usage</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Usage & Transcription Time</h1>
           <p className="text-gray-600 mt-2">
-            Manage your transcription credits and view usage statistics
+            Monitor your video processing and purchase additional transcription time
           </p>
         </div>
 
-        {/* Current Credits Overview */}
+        {/* Current Usage Overview */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Available Credits</CardTitle>
-              <CreditCard className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-sm font-medium">Videos Processed</CardTitle>
+              <VideoIcon className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">{userCredits.current}</div>
-              <p className="text-xs text-gray-500">Ready to use</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Usage</CardTitle>
-              <Package className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{userCredits.totalUsed}</div>
-              <p className="text-xs text-gray-500">of {userCredits.monthlyLimit} videos</p>
-              <Progress value={creditUsagePercentage} className="mt-2" />
+              <div className="text-3xl font-bold text-blue-600">{userUsage.videosProcessed}</div>
+              <p className="text-xs text-gray-500">of {userUsage.monthlyVideoLimit} this month</p>
+              <Progress value={videoUsagePercentage} className="mt-2" />
             </CardContent>
           </Card>
 
@@ -159,9 +161,22 @@ const CreditsPage = () => {
               <Clock className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userCredits.minutesUsed}</div>
-              <p className="text-xs text-gray-500">of {userCredits.minutesLimit} minutes</p>
-              <Progress value={minutesUsagePercentage} className="mt-2" />
+              <div className="text-3xl font-bold text-orange-600">{userUsage.totalMinutes}</div>
+              <p className="text-xs text-gray-500">of {userUsage.monthlyMinuteLimit} minutes</p>
+              <Progress value={minuteUsagePercentage} className="mt-2" />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Available Time</CardTitle>
+              <PlayCircle className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {formatMinutes(userUsage.availableMinutes)}
+              </div>
+              <p className="text-xs text-gray-500">Ready to use</p>
             </CardContent>
           </Card>
 
@@ -169,7 +184,7 @@ const CreditsPage = () => {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Current Plan</CardTitle>
               <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                {userCredits.plan}
+                {userUsage.plan}
               </Badge>
             </CardHeader>
             <CardContent>
@@ -179,12 +194,15 @@ const CreditsPage = () => {
           </Card>
         </div>
 
-        {/* Purchase Transcription Hours */}
+        {/* Purchase Transcription Time */}
         <Card>
           <CardHeader>
-            <CardTitle>Buy Transcription Hours</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5" />
+              Buy Transcription Time
+            </CardTitle>
             <CardDescription>
-              Purchase additional transcription time with instant credit delivery
+              Purchase additional transcription minutes for processing more videos
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -206,7 +224,7 @@ const CreditsPage = () => {
                   
                   <div className="text-center">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {pkg.duration}
+                      {pkg.duration} minutes
                     </h3>
                     
                     <div className="text-3xl font-bold text-orange-600 mb-1">
@@ -214,7 +232,7 @@ const CreditsPage = () => {
                     </div>
                     
                     <div className="text-sm text-gray-600 mb-4">
-                      {pkg.credits} credits
+                      {pkg.estimatedVideos}
                     </div>
                     
                     <p className="text-sm text-gray-500 mb-6">
@@ -229,7 +247,7 @@ const CreditsPage = () => {
                           : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                       }`}
                     >
-                      Purchase Package
+                      Purchase {pkg.duration}m
                     </Button>
                   </div>
                 </div>
@@ -240,11 +258,12 @@ const CreditsPage = () => {
               <div className="flex items-start gap-3">
                 <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5" />
                 <div>
-                  <h4 className="text-sm font-medium text-blue-900">How Credits Work</h4>
+                  <h4 className="text-sm font-medium text-blue-900">How Transcription Time Works</h4>
                   <ul className="text-sm text-blue-700 mt-2 space-y-1">
-                    <li>• 1 credit = ~6 minutes of video transcription</li>
-                    <li>• Credits never expire and roll over each month</li>
-                    <li>• Instant delivery - use immediately after purchase</li>
+                    <li>• Purchase minutes to transcribe any length of YouTube videos</li>
+                    <li>• 1 minute of transcription = 1 minute of video content</li>
+                    <li>• Minutes never expire and roll over each month</li>
+                    <li>• Process unlimited number of videos within your minute allowance</li>
                     <li>• All formats included: Chinese, Yale, Jyutping, English</li>
                   </ul>
                 </div>
@@ -253,50 +272,55 @@ const CreditsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Credit History */}
+        {/* Usage History */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <History className="h-5 w-5" />
-              Credit History
+              Processing History
             </CardTitle>
             <CardDescription>
-              Your recent credit transactions and usage
+              Your recent video processing and purchases
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {creditHistory.map((transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
+              {processingHistory.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-4">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      transaction.type === 'used' 
-                        ? 'bg-red-100 text-red-600' 
+                      item.type === 'processed' 
+                        ? 'bg-blue-100 text-blue-600' 
                         : 'bg-green-100 text-green-600'
                     }`}>
-                      {transaction.type === 'used' ? '-' : '+'}
+                      {item.type === 'processed' ? <VideoIcon className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
                     </div>
                     
                     <div>
                       <div className="font-medium text-gray-900">
-                        {transaction.description}
+                        {item.title}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {formatDate(transaction.date)}
-                        {transaction.duration && ` • ${transaction.duration} duration`}
-                        {transaction.price && ` • ${transaction.price}`}
+                        {formatDate(item.date)}
+                        {item.url && (
+                          <span className="ml-2 text-blue-600 underline cursor-pointer" 
+                                onClick={() => window.open(item.url, '_blank')}>
+                            View Video
+                          </span>
+                        )}
+                        {item.price && ` • ${item.price}`}
                       </div>
                     </div>
                   </div>
                   
                   <div className={`text-right ${
-                    transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+                    item.type === 'purchased' ? 'text-green-600' : 'text-blue-600'
                   }`}>
                     <div className="font-medium">
-                      {transaction.amount > 0 ? '+' : ''}{transaction.amount} credits
+                      {item.type === 'purchased' ? '+' : ''}{formatMinutes(item.duration)}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {transaction.type === 'used' ? 'Used' : 'Purchased'}
+                      {item.type === 'processed' ? 'Used' : 'Purchased'}
                     </div>
                   </div>
                 </div>
@@ -305,23 +329,24 @@ const CreditsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Low Credit Warning */}
-        {userCredits.current <= 2 && (
+        {/* Low Minutes Warning */}
+        {userUsage.availableMinutes <= 30 && (
           <Card className="border-amber-200 bg-amber-50">
             <CardContent className="p-6">
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
                 <div>
-                  <h3 className="font-medium text-amber-900">Low Credit Warning</h3>
+                  <h3 className="font-medium text-amber-900">Low Transcription Time Warning</h3>
                   <p className="text-sm text-amber-700 mt-1">
-                    You only have {userCredits.current} credits remaining. Purchase more credits above to continue transcribing videos.
+                    You only have {formatMinutes(userUsage.availableMinutes)} of transcription time remaining. 
+                    Purchase more minutes above to continue processing videos.
                   </p>
                   <Button
                     onClick={() => handlePurchase(packages[1])} // Default to 1 hour package
                     className="mt-3 bg-amber-600 hover:bg-amber-700 text-white"
                     size="sm"
                   >
-                    Buy More Credits
+                    Buy More Time
                   </Button>
                 </div>
               </div>
@@ -333,4 +358,4 @@ const CreditsPage = () => {
   );
 };
 
-export default CreditsPage;
+export default UsagePage;
