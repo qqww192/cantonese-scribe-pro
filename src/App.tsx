@@ -1,10 +1,13 @@
-// src/App.tsx - Updated with learning features
+// src/App.tsx - Fixed with proper video navigation flow
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from 'react';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { HowItWorks } from '@/components/HowItWorks';
 import { Features } from '@/components/Features';
 import { Footer } from '@/components/Footer';
+import { VideoSelectionPage } from '@/components/VideoSelectionPage';
+import VideoResultsPage from '@/components/VideoResultsPage';
 import PricingPage from '@/components/PricingPage';
 import LoginPage from '@/components/LoginPage';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -67,20 +70,85 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Main Homepage Component with Video Flow
+const HomePage = () => {
+  const [currentStep, setCurrentStep] = useState<'home' | 'selection' | 'results'>('home');
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string>('');
+  const [processingData, setProcessingData] = useState<{
+    startTime: number;
+    endTime: number;
+    duration: number;
+  } | null>(null);
+
+  const handleVideoSelected = (url: string) => {
+    setSelectedVideoUrl(url);
+    setCurrentStep('selection');
+  };
+
+  const handleVideoSelectionProceed = (startTime: number, endTime: number, selectedDuration: number) => {
+    setProcessingData({ startTime, endTime, duration: selectedDuration });
+    setCurrentStep('results');
+  };
+
+  const handleBackToHome = () => {
+    setCurrentStep('home');
+    setSelectedVideoUrl('');
+    setProcessingData(null);
+  };
+
+  const handleBackToSelection = () => {
+    setCurrentStep('selection');
+    setProcessingData(null);
+  };
+
+  // Render different steps based on current state
+  if (currentStep === 'results' && processingData) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <VideoResultsPage
+          videoUrl={selectedVideoUrl}
+          videoTitle="Sample Cantonese Video" // You can extract this from video metadata
+          processingData={processingData}
+          onBack={handleBackToSelection}
+        />
+        <Footer />
+      </div>
+    );
+  }
+
+  if (currentStep === 'selection') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <VideoSelectionPage
+          videoUrl={selectedVideoUrl}
+          onProceed={handleVideoSelectionProceed}
+          onBack={handleBackToHome}
+        />
+        <Footer />
+      </div>
+    );
+  }
+
+  // Default home view
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <HeroSection onVideoSelected={handleVideoSelected} />
+      <HowItWorks />
+      <Features />
+      <Footer />
+    </div>
+  );
+};
+
 function App() {
   return (
     <Router>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={
-          <div className="min-h-screen bg-gray-50">
-            <Header />
-            <HeroSection />
-            <HowItWorks />
-            <Features />
-            <Footer />
-          </div>
-        } />
+        <Route path="/" element={<HomePage />} />
         
         <Route path="/pricing" element={
           <div className="min-h-screen bg-gray-50">
