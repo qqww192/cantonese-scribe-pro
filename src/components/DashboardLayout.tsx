@@ -1,4 +1,3 @@
-// src/components/DashboardLayout.tsx - Enhanced with learning features
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -15,20 +14,12 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { 
-  Home,
   BarChart3, 
   FileText, 
   Settings, 
   LogOut, 
   User,
-  ChevronRight,
-  Gamepad2,
-  Brain,
-  Mic,
-  TrendingUp,
-  Target,
-  Download,
-  RotateCcw
+  ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,67 +47,16 @@ const DashboardLayout = () => {
 
   const coreMenuItems = [
     {
-      title: "Home",
-      icon: Home,
-      path: "/dashboard",
-      description: "Dashboard overview"
-    },
-    {
       title: "Usage",
       icon: BarChart3,
       path: "/dashboard/usage",
-      description: "View your transcription usage"
+      description: "View your transcription history and usage"
     },
     {
       title: "Saved Files",
       icon: FileText,
       path: "/dashboard/files",
       description: "Access your saved transcriptions"
-    }
-  ];
-
-  const learningMenuItems = [
-    {
-      title: "Flashcard Games",
-      icon: Gamepad2,
-      path: "/dashboard/flashcards",
-      description: "AI-powered flashcard games"
-    },
-    {
-      title: "Vocabulary",
-      icon: Brain,
-      path: "/dashboard/vocabulary",
-      description: "Smart vocabulary categorisation"
-    },
-    {
-      title: "Pronunciation",
-      icon: Mic,
-      path: "/dashboard/pronunciation",
-      description: "Practice with AI feedback"
-    },
-    {
-      title: "Analytics",
-      icon: TrendingUp,
-      path: "/dashboard/analytics",
-      description: "Learning progress analytics"
-    },
-    {
-      title: "Adaptive Learning",
-      icon: Target,
-      path: "/dashboard/adaptive",
-      description: "Adaptive difficulty system"
-    },
-    {
-      title: "Export",
-      icon: Download,
-      path: "/dashboard/export",
-      description: "Anki/Quizlet integration"
-    },
-    {
-      title: "Spaced Repetition",
-      icon: RotateCcw,
-      path: "/dashboard/spaced-repetition",
-      description: "Spaced repetition scheduling"
     }
   ];
 
@@ -129,7 +69,7 @@ const DashboardLayout = () => {
     }
   ];
 
-  const allMenuItems = [...coreMenuItems, ...learningMenuItems, ...settingsMenuItems];
+  const allMenuItems = [...coreMenuItems, ...settingsMenuItems];
 
   return (
     <SidebarProvider>
@@ -172,31 +112,7 @@ const DashboardLayout = () => {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* Learning Features Navigation */}
-            <SidebarGroup>
-              <SidebarGroupLabel>Learning Features</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {learningMenuItems.map((item) => (
-                    <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton
-                        onClick={() => navigate(item.path)}
-                        isActive={location.pathname === item.path}
-                        className="w-full justify-start"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                        {location.pathname === item.path && (
-                          <ChevronRight className="ml-auto h-4 w-4" />
-                        )}
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Settings Navigation */}
+            {/* Account Navigation */}
             <SidebarGroup>
               <SidebarGroupLabel>Account</SidebarGroupLabel>
               <SidebarGroupContent>

@@ -1,100 +1,121 @@
-// src/components/Header.tsx
-import React from 'react';
-
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export const Header = () => {
-  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
-  
-  const languages = [
-    { code: 'en', label: 'English' },
-    { code: 'zh-Hant', label: '繁體中文' },
-    { code: 'ja', label: '日本語' }
-  ];
-  
-  const [selectedLanguage, setSelectedLanguage] = useState(languages[0]);
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [credits, setCredits] = useState(5); // Mock credits
+
+  useEffect(() => {
+    // Check authentication status on mount and when storage changes
+    const checkAuth = () => {
+      const authToken = localStorage.getItem('authToken');
+      setIsAuthenticated(!!authToken);
+    };
+
+    checkAuth();
+
+    // Listen for storage changes (when user logs in/out from another tab)
+    window.addEventListener('storage', checkAuth);
+
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+    };
+  }, []);
+
+  const handleSignOut = () => {
+    localStorage.removeItem('authToken');
+    setIsAuthenticated(false);
+    navigate('/');
+  };
+
+  const handleSignIn = () => {
+    navigate('/auth');
+  };
 
   return (
-    <header className="bg-white border-b border-gray-200 py-3 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex items-center justify-between">
-          {/* Logo Section */}
-          <div className="flex items-center gap-3">
+    <header className="bg-white shadow-sm border-b border-gray-200">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center py-4">
+          {/* Logo */}
+          <div 
+            className="flex items-center gap-3 cursor-pointer" 
+            onClick={() => navigate('/')}
+          >
             <img 
               src="/src/assets/logo.png" 
               alt="CantoneseScribe Logo" 
               className="w-8 h-8 object-contain"
             />
-            <div className="text-lg font-medium text-gray-900 uppercase tracking-wide">
-              CANTONESE SCRIBE
+            <div className="text-xl font-bold text-gray-900 uppercase tracking-wide">
+              CantoneseScribe
             </div>
           </div>
-          
+
           {/* Navigation */}
-          <nav className="flex items-center gap-8">
-            <a 
-              href="/" 
-              className="text-sm text-orange-600 hover:text-orange-700 transition-colors font-medium"
-            >
-              Home
-            </a>
-            <a 
-              href="/pricing" 
-              className="text-sm text-orange-600 hover:text-orange-700 transition-colors font-medium"
+          <div className="flex items-center gap-6">
+            {/* Pricing - always visible */}
+            <button
+              onClick={() => navigate('/pricing')}
+              className="text-gray-600 hover:text-gray-900 transition-colors"
             >
               Pricing
-            </a>
-            <a 
-              href="/auth" 
-              className="text-sm text-blue-600 hover:text-blue-700 transition-colors font-medium"
-            >
-              Login/Register
-            </a>
-            
-            {/* Language Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
-                className="flex items-center gap-1 text-sm text-orange-600 hover:text-orange-700 transition-colors font-medium"
-              >
-                {selectedLanguage.label}
-                <svg 
-                  className={`w-4 h-4 text-orange-600 transition-transform ${isLanguageDropdownOpen ? 'rotate-180' : ''}`}
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {/* Dropdown Menu */}
-              {isLanguageDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                  {languages.map((language) => (
-                    <button
-                      key={language.code}
-                      onClick={() => {
-                        setSelectedLanguage(language);
-                        setIsLanguageDropdownOpen(false);
-                      }}
-                      className={`block w-full text-left px-3 py-2 text-sm hover:bg-orange-50 transition-colors ${
-                        selectedLanguage.code === language.code 
-                          ? 'text-orange-600 bg-orange-50' 
-                          : 'text-gray-700'
-                      }`}
-                    >
-                      {language.label}
-                    </button>
-                  ))}
+            </button>
+
+            {isAuthenticated ? (
+              /* After Login Navigation */
+              <>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm text-gray-600">Credits</span>
+                  <Badge variant="secondary" className="bg-green-100 text-green-800">
+                    {credits}
+                  </Badge>
                 </div>
-              )}
-            </div>
-          </nav>
+                
+                <button
+                  onClick={() => navigate('/history')}
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  History
+                </button>
+                
+                <button
+                  onClick={() => navigate('/settings')}
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  Settings
+                </button>
+                
+                <button
+                  onClick={handleSignOut}
+                  className="text-red-600 hover:text-red-700 transition-colors"
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              /* Before Login Navigation */
+              <>
+                <button
+                  onClick={handleSignIn}
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  Login
+                </button>
+                
+                <Button
+                  onClick={handleSignIn}
+                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                >
+                  Register
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </header>
   );
 };
-
-export default Header;
