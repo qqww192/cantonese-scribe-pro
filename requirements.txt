@@ -1,0 +1,42 @@
+# FastAPI and ASGI
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+starlette==0.27.0
+
+# Authentication and Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# Database and Storage
+asyncpg==0.29.0
+supabase==2.3.4
+
+# HTTP Client
+aiohttp==3.9.1
+requests==2.31.0
+
+# Data Validation and Serialization
+pydantic==2.5.2
+pydantic[email]==2.5.2
+
+# File Processing
+aiofiles==23.2.1
+
+# Audio/Video Processing
+yt-dlp==2023.12.30
+
+# Cantonese Processing
+pycantonese==3.4.0
+
+# Utilities
+python-dotenv==1.0.0
+PyYAML==6.0.1
+
+# Development and Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+
+# Logging
+structlog==23.2.0
