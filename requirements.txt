@@ -19,6 +19,7 @@ requests==2.31.0
 # Data Validation and Serialization
 pydantic==2.5.2
 pydantic[email]==2.5.2
+pydantic-settings==2.1.0
 
 # File Processing
 aiofiles==23.2.1
