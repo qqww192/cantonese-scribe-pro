@@ -68,6 +68,5 @@ node_modules/
 dist/
 build/
 
-# Python package markers and subdirectories (not serverless functions)
-api/__init__.py
+# Python package subdirectories (not serverless functions)
 api/app/

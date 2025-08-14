@@ -1,1 +1,0 @@
-# This is not a serverless function - just a package marker
