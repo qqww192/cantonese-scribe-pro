@@ -1,0 +1,119 @@
+{
+  "alerts": {
+    "version": "1.0",
+    "global_settings": {
+      "escalation_delay": 300,
+      "auto_resolve": true,
+      "maintenance_mode": false
+    },
+    "notification_channels": {
+      "email": {
+        "enabled": true,
+        "recipients": ["admin@cantonese-scribe.com", "devops@cantonese-scribe.com"],
+        "severity_filter": ["critical", "warning"]
+      },
+      "slack": {
+        "enabled": true,
+        "webhook_url": "SLACK_WEBHOOK_URL",
+        "channel": "#alerts-production",
+        "severity_filter": ["critical", "warning", "info"]
+      },
+      "pager_duty": {
+        "enabled": false,
+        "integration_key": "PAGERDUTY_INTEGRATION_KEY",
+        "severity_filter": ["critical"]
+      }
+    },
+    "alert_rules": [
+      {
+        "name": "High Error Rate",
+        "description": "API error rate exceeds 5%",
+        "condition": "error_rate > 0.05",
+        "severity": "critical",
+        "duration": "5m",
+        "channels": ["email", "slack"],
+        "runbook_url": "https://docs.cantonese-scribe.com/runbooks/high-error-rate"
+      },
+      {
+        "name": "High Response Time",
+        "description": "API response time P95 exceeds 5 seconds",
+        "condition": "response_time_p95 > 5000",
+        "severity": "warning",
+        "duration": "10m",
+        "channels": ["email", "slack"]
+      },
+      {
+        "name": "Database Connection Issues",
+        "description": "Database health check failing",
+        "condition": "database_health != 'healthy'",
+        "severity": "critical",
+        "duration": "2m",
+        "channels": ["email", "slack", "pager_duty"]
+      },
+      {
+        "name": "High Daily Cost",
+        "description": "Daily cost exceeds 80% of limit",
+        "condition": "daily_cost > (max_daily_cost * 0.8)",
+        "severity": "warning",
+        "duration": "0m",
+        "channels": ["email", "slack"]
+      },
+      {
+        "name": "Critical Daily Cost",
+        "description": "Daily cost exceeds 95% of limit",
+        "condition": "daily_cost > (max_daily_cost * 0.95)",
+        "severity": "critical",
+        "duration": "0m",
+        "channels": ["email", "slack"]
+      },
+      {
+        "name": "Queue Backup",
+        "description": "Transcription queue has too many pending jobs",
+        "condition": "transcription_queue_size > 50",
+        "severity": "warning",
+        "duration": "15m",
+        "channels": ["email", "slack"]
+      },
+      {
+        "name": "Low User Activity",
+        "description": "No new user registrations in 24 hours",
+        "condition": "new_users_24h == 0",
+        "severity": "info",
+        "duration": "24h",
+        "channels": ["slack"]
+      },
+      {
+        "name": "High Memory Usage",
+        "description": "System memory usage exceeds 85%",
+        "condition": "memory_usage > 0.85",
+        "severity": "warning",
+        "duration": "10m",
+        "channels": ["email", "slack"]
+      },
+      {
+        "name": "API Quota Warning",
+        "description": "Google API quota usage exceeds 80%",
+        "condition": "api_quota_usage > 0.8",
+        "severity": "warning",
+        "duration": "0m",
+        "channels": ["email", "slack"]
+      },
+      {
+        "name": "Payment Processing Failure",
+        "description": "High rate of payment failures",
+        "condition": "payment_failure_rate > 0.1",
+        "severity": "critical",
+        "duration": "5m",
+        "channels": ["email", "slack"]
+      }
+    ],
+    "maintenance_windows": [
+      {
+        "name": "Weekly Maintenance",
+        "schedule": "0 2 * * 0",
+        "duration": "2h",
+        "suppress_alerts": ["info", "warning"]
+      }
+    ]
+  }
+}

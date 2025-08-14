@@ -16,6 +16,10 @@ from core.logging import setup_logging
 from core.exceptions import AppException
 from api.v1.api import api_router
 from core.storage import cleanup_temp_files
+from services.database_service import init_database
+from services.google_speech_service import init_google_speech_service
+from services.unified_transcription_service import init_unified_transcription_service
+from middleware.error_handling import add_error_handlers
 
 
 @asynccontextmanager
@@ -28,6 +32,33 @@ async def lifespan(app: FastAPI):
     # Ensure required directories exist
     from core.storage import ensure_directories
     ensure_directories()
+    
+    # Initialize database connection
+    try:
+        await init_database()
+        logging.info("Database initialized successfully")
+    except Exception as e:
+        logging.error(f"Failed to initialize database: {str(e)}")
+        # Don't fail startup for database issues in development
+        if get_settings().environment == "production":
+            raise
+    
+    # Initialize transcription services
+    try:
+        await init_google_speech_service()
+        logging.info("Google Speech service initialized successfully")
+    except Exception as e:
+        logging.warning(f"Failed to initialize Google Speech service: {str(e)}")
+        # Continue startup even if Google Speech fails
+    
+    try:
+        await init_unified_transcription_service()
+        logging.info("Unified transcription service initialized successfully")
+    except Exception as e:
+        logging.error(f"Failed to initialize unified transcription service: {str(e)}")
+        # Don't fail startup for transcription service issues in development
+        if get_settings().environment == "production":
+            raise
     
     yield
     
@@ -69,13 +100,8 @@ def create_application() -> FastAPI:
     # Include API router
     app.include_router(api_router)
     
-    # Global exception handler
-    @app.exception_handler(AppException)
-    async def app_exception_handler(request: Request, exc: AppException):
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={"detail": exc.detail, "error_code": exc.error_code}
-        )
+    # Add comprehensive error handling
+    add_error_handlers(app)
     
     # Health check endpoint
     @app.get("/health")

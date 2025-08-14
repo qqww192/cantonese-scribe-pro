@@ -1,0 +1,154 @@
+{
+  "dashboards": {
+    "production_overview": {
+      "name": "CantoneseScribe Production Overview",
+      "refresh_interval": "30s",
+      "panels": [
+        {
+          "title": "System Health",
+          "type": "stat",
+          "metrics": [
+            "system_status",
+            "uptime_percentage",
+            "active_users"
+          ],
+          "thresholds": {
+            "green": [0.99, 1.0],
+            "yellow": [0.95, 0.99],
+            "red": [0, 0.95]
+          }
+        },
+        {
+          "title": "API Performance",
+          "type": "graph",
+          "metrics": [
+            "response_time_p50",
+            "response_time_p95",
+            "response_time_p99"
+          ],
+          "time_range": "1h"
+        },
+        {
+          "title": "Error Rates",
+          "type": "graph",
+          "metrics": [
+            "error_rate",
+            "4xx_rate",
+            "5xx_rate"
+          ],
+          "time_range": "1h"
+        },
+        {
+          "title": "Transcription Metrics",
+          "type": "table",
+          "metrics": [
+            "transcriptions_processed",
+            "transcription_success_rate",
+            "avg_processing_time",
+            "queue_size"
+          ]
+        },
+        {
+          "title": "Cost Tracking",
+          "type": "stat",
+          "metrics": [
+            "daily_cost",
+            "monthly_cost",
+            "cost_per_transcription",
+            "cost_utilization"
+          ]
+        },
+        {
+          "title": "User Activity",
+          "type": "graph",
+          "metrics": [
+            "new_users",
+            "active_users",
+            "user_sessions",
+            "conversion_rate"
+          ],
+          "time_range": "24h"
+        }
+      ]
+    },
+    "infrastructure": {
+      "name": "Infrastructure Monitoring",
+      "panels": [
+        {
+          "title": "Vercel Functions",
+          "type": "graph",
+          "metrics": [
+            "function_invocations",
+            "function_duration",
+            "function_errors",
+            "cold_starts"
+          ]
+        },
+        {
+          "title": "Database Performance",
+          "type": "graph",
+          "metrics": [
+            "db_connections",
+            "db_query_time",
+            "db_error_rate",
+            "db_storage_used"
+          ]
+        },
+        {
+          "title": "External APIs",
+          "type": "table",
+          "metrics": [
+            "openai_api_calls",
+            "google_speech_calls",
+            "google_translate_calls",
+            "stripe_api_calls"
+          ]
+        },
+        {
+          "title": "Storage Usage",
+          "type": "stat",
+          "metrics": [
+            "r2_storage_used",
+            "supabase_storage_used",
+            "temp_files_cleanup"
+          ]
+        }
+      ]
+    },
+    "business_metrics": {
+      "name": "Business Metrics",
+      "panels": [
+        {
+          "title": "Revenue Tracking",
+          "type": "graph",
+          "metrics": [
+            "daily_revenue",
+            "monthly_revenue",
+            "subscription_revenue",
+            "pay_per_use_revenue"
+          ]
+        },
+        {
+          "title": "User Engagement",
+          "type": "table",
+          "metrics": [
+            "daily_active_users",
+            "monthly_active_users",
+            "user_retention_rate",
+            "feature_adoption"
+          ]
+        },
+        {
+          "title": "Conversion Funnel",
+          "type": "funnel",
+          "metrics": [
+            "visitors",
+            "signups",
+            "first_transcription",
+            "paid_conversions"
+          ]
+        }
+      ]
+    }
+  }
+}

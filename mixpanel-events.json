@@ -1,0 +1,65 @@
+{
+  "mixpanel_events": {
+    "user_lifecycle": [
+      {
+        "event": "User Registered",
+        "properties": ["signup_source", "plan_selected", "timestamp"]
+      },
+      {
+        "event": "First Transcription",
+        "properties": ["file_type", "duration", "processing_time", "timestamp"]
+      },
+      {
+        "event": "Payment Completed",
+        "properties": ["plan", "amount", "payment_method", "timestamp"]
+      },
+      {
+        "event": "Subscription Cancelled",
+        "properties": ["plan", "cancellation_reason", "timestamp"]
+      }
+    ],
+    "feature_usage": [
+      {
+        "event": "Transcription Started",
+        "properties": ["provider", "language", "file_size", "user_tier"]
+      },
+      {
+        "event": "Export Downloaded",
+        "properties": ["format", "file_size", "user_tier"]
+      },
+      {
+        "event": "Settings Updated",
+        "properties": ["settings_changed", "user_tier"]
+      }
+    ],
+    "errors": [
+      {
+        "event": "Transcription Failed",
+        "properties": ["error_type", "provider", "retry_count", "user_tier"]
+      },
+      {
+        "event": "Payment Failed",
+        "properties": ["error_code", "payment_method", "amount"]
+      }
+    ],
+    "funnels": [
+      {
+        "name": "User Conversion",
+        "steps": [
+          "Page Viewed",
+          "User Registered",
+          "First Transcription",
+          "Payment Completed"
+        ]
+      },
+      {
+        "name": "Transcription Success",
+        "steps": [
+          "Transcription Started",
+          "Processing Completed",
+          "Export Downloaded"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "monitoring": {
+    "name": "CantoneseScribe Production Monitoring",
+    "version": "1.0",
+    "environment": "production",
+    "services": {
+      "vercel": {
+        "enabled": true,
+        "analytics": true,
+        "functions_monitoring": true,
+        "edge_functions": true
+      },
+      "sentry": {
+        "enabled": true,
+        "error_tracking": true,
+        "performance_monitoring": true,
+        "traces_sample_rate": 0.1,
+        "profiles_sample_rate": 0.1
+      },
+      "datadog": {
+        "enabled": true,
+        "apm": true,
+        "logs": true,
+        "metrics": true,
+        "synthetic_monitoring": true
+      },
+      "uptime_robot": {
+        "enabled": true,
+        "monitors": [
+          {
+            "name": "Main Health Check",
+            "url": "https://cantonese-scribe.vercel.app/api/v1/health",
+            "type": "HTTP",
+            "interval": 300
+          },
+          {
+            "name": "Detailed Health Check",
+            "url": "https://cantonese-scribe.vercel.app/api/v1/health/detailed",
+            "type": "HTTP",
+            "interval": 600
+          },
+          {
+            "name": "Frontend Availability",
+            "url": "https://cantonese-scribe.vercel.app/",
+            "type": "HTTP",
+            "interval": 300
+          }
+        ]
+      },
+      "mixpanel": {
+        "enabled": true,
+        "events_tracking": true,
+        "user_analytics": true,
+        "conversion_tracking": true
+      }
+    },
+    "health_checks": {
+      "endpoints": [
+        "/api/v1/health",
+        "/api/v1/health/detailed",
+        "/api/v1/health/metrics"
+      ],
+      "intervals": {
+        "basic": 60,
+        "detailed": 300,
+        "metrics": 300
+      }
+    },
+    "metrics": {
+      "system": [
+        "cpu_usage",
+        "memory_usage",
+        "disk_usage",
+        "network_io",
+        "active_connections"
+      ],
+      "application": [
+        "request_count",
+        "response_time",
+        "error_rate",
+        "active_users",
+        "transcription_queue_size",
+        "daily_cost",
+        "api_quota_usage"
+      ],
+      "business": [
+        "user_registrations",
+        "transcription_requests",
+        "payment_success_rate",
+        "subscription_churn",
+        "customer_satisfaction"
+      ]
+    }
+  }
+}

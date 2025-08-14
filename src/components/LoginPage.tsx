@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from '@/contexts/AuthContext';
+import { APIError, ValidationError } from '@/services/api';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login, register, loading, error, isAuthenticated } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -16,8 +21,17 @@ const LoginPage = () => {
     agreeToTerms: false
   });
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
   const toggleMode = () => {
     setIsLogin(!isLogin);
+    setLocalError(null);
+    setValidationErrors({});
     setFormData({
       name: '',
       email: '',
@@ -33,31 +47,65 @@ const LoginPage = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    
+    // Clear field-specific validation errors
+    if (validationErrors[name]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+    
+    // Clear general errors
+    if (localError) setLocalError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLocalError(null);
+    setValidationErrors({});
 
     try {
-      // Your authentication logic here
-      // For demonstration, we'll simulate a successful login
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (isLogin) {
+        // Login
+        await login({
+          email: formData.email,
+          password: formData.password
+        });
+      } else {
+        // Registration - client-side validation
+        if (formData.password !== formData.confirmPassword) {
+          setValidationErrors({ confirmPassword: ['Passwords do not match'] });
+          return;
+        }
+        
+        if (!formData.agreeToTerms) {
+          setValidationErrors({ agreeToTerms: ['You must agree to the terms and conditions'] });
+          return;
+        }
+        
+        await register({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword
+        });
+      }
       
-      // Set authentication token (replace with your actual token)
-      localStorage.setItem('authToken', 'your-auth-token');
+      // Navigate to home page on success
+      navigate('/', { replace: true });
       
-      // Navigate to home page instead of dashboard
-      navigate('/');
+    } catch (err) {
+      console.error('Authentication failed:', err);
       
-      // Show URL in console for debugging (you can modify this as needed)
-      console.log('Current URL after login:', window.location.href);
-      
-    } catch (error) {
-      console.error('Login failed:', error);
-      // Handle error - you might want to show a toast or error message
-    } finally {
-      setIsLoading(false);
+      if (err instanceof ValidationError) {
+        setValidationErrors(err.errors);
+      } else if (err instanceof APIError) {
+        setLocalError(err.message);
+      } else {
+        setLocalError(isLogin ? 'Login failed. Please try again.' : 'Registration failed. Please try again.');
+      }
     }
   };
 
@@ -93,6 +141,15 @@ const LoginPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Display errors */}
+            {(error || localError) && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {error || localError}
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <div>
@@ -103,8 +160,11 @@ const LoginPage = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     required={!isLogin}
-                    className="w-full"
+                    className={`w-full ${validationErrors.name ? 'border-red-500' : ''}`}
                   />
+                  {validationErrors.name && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.name[0]}</p>
+                  )}
                 </div>
               )}
               
@@ -116,8 +176,11 @@ const LoginPage = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   required
-                  className="w-full"
+                  className={`w-full ${validationErrors.email ? 'border-red-500' : ''}`}
                 />
+                {validationErrors.email && (
+                  <p className="text-red-500 text-sm mt-1">{validationErrors.email[0]}</p>
+                )}
               </div>
               
               <div>
@@ -128,8 +191,11 @@ const LoginPage = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   required
-                  className="w-full"
+                  className={`w-full ${validationErrors.password ? 'border-red-500' : ''}`}
                 />
+                {validationErrors.password && (
+                  <p className="text-red-500 text-sm mt-1">{validationErrors.password[0]}</p>
+                )}
               </div>
               
               {!isLogin && (
@@ -141,41 +207,49 @@ const LoginPage = () => {
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     required={!isLogin}
-                    className="w-full"
+                    className={`w-full ${validationErrors.confirmPassword ? 'border-red-500' : ''}`}
                   />
+                  {validationErrors.confirmPassword && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.confirmPassword[0]}</p>
+                  )}
                 </div>
               )}
 
               {!isLogin && (
-                <div className="flex items-center space-x-2">
-                  <input
-                    id="agree-terms"
-                    name="agreeToTerms"
-                    type="checkbox"
-                    checked={formData.agreeToTerms}
-                    onChange={handleInputChange}
-                    required={!isLogin}
-                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="agree-terms" className="text-sm text-gray-600">
-                    I agree to the{' '}
-                    <a href="#" className="text-orange-600 hover:text-orange-700 underline">
-                      Terms of Service
-                    </a>{' '}
-                    and{' '}
-                    <a href="#" className="text-orange-600 hover:text-orange-700 underline">
-                      Privacy Policy
-                    </a>
-                  </label>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      id="agree-terms"
+                      name="agreeToTerms"
+                      type="checkbox"
+                      checked={formData.agreeToTerms}
+                      onChange={handleInputChange}
+                      required={!isLogin}
+                      className={`h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded ${validationErrors.agreeToTerms ? 'border-red-500' : ''}`}
+                    />
+                    <label htmlFor="agree-terms" className="text-sm text-gray-600">
+                      I agree to the{' '}
+                      <a href="#" className="text-orange-600 hover:text-orange-700 underline">
+                        Terms of Service
+                      </a>{' '}
+                      and{' '}
+                      <a href="#" className="text-orange-600 hover:text-orange-700 underline">
+                        Privacy Policy
+                      </a>
+                    </label>
+                  </div>
+                  {validationErrors.agreeToTerms && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.agreeToTerms[0]}</p>
+                  )}
                 </div>
               )}
 
               <Button
                 type="submit"
-                disabled={isLoading || (!isLogin && !formData.agreeToTerms)}
+                disabled={loading || (!isLogin && !formData.agreeToTerms)}
                 className="w-full bg-orange-600 hover:bg-orange-700 text-white"
               >
-                {isLoading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
+                {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
               </Button>
             </form>
           </CardContent>

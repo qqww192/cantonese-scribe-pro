@@ -75,3 +75,17 @@ class CostLimitError(AppException):
     
     def __init__(self, detail: str = "Cost limit exceeded"):
         super().__init__(detail, status_code=402, error_code="COST_LIMIT_ERROR")
+
+
+class DatabaseError(AppException):
+    """Database operation errors."""
+    
+    def __init__(self, detail: str = "Database operation failed"):
+        super().__init__(detail, status_code=500, error_code="DATABASE_ERROR")
+
+
+class NotFoundError(AppException):
+    """Resource not found errors."""
+    
+    def __init__(self, detail: str = "Resource not found"):
+        super().__init__(detail, status_code=404, error_code="NOT_FOUND_ERROR")

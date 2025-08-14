@@ -21,6 +21,8 @@ from services.export_service import export_service
 from core.storage import file_manager
 from core.logging import get_logger
 from core.exceptions import ProcessingError
+from services.progress_service import progress_service
+from services.unified_transcription_service import unified_transcription_service
 
 logger = get_logger(__name__)
 
@@ -56,6 +58,10 @@ class TranscriptionService:
         )
         
         self.jobs[job_id] = job
+        
+        # Initialize progress tracking
+        await progress_service.create_job_progress(job_id, user_id)
+        
         logger.info(f"Created transcription job: {job_id}")
         return job
     

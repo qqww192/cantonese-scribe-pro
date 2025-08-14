@@ -1,0 +1,56 @@
+{
+  "monitors": [
+    {
+      "friendly_name": "CantoneseScribe Main Site",
+      "url": "https://cantonese-scribe.vercel.app/",
+      "type": "HTTP",
+      "interval": 300,
+      "timeout": 30,
+      "http_method": "GET",
+      "http_status_code": "200"
+    },
+    {
+      "friendly_name": "API Health Check",
+      "url": "https://cantonese-scribe.vercel.app/api/v1/health",
+      "type": "HTTP",
+      "interval": 300,
+      "timeout": 30,
+      "http_method": "GET",
+      "keyword_type": "exists",
+      "keyword_value": "healthy"
+    },
+    {
+      "friendly_name": "API Detailed Health",
+      "url": "https://cantonese-scribe.vercel.app/api/v1/health/detailed",
+      "type": "HTTP",
+      "interval": 600,
+      "timeout": 30,
+      "http_method": "GET",
+      "keyword_type": "exists",
+      "keyword_value": "healthy"
+    },
+    {
+      "friendly_name": "API Metrics Endpoint",
+      "url": "https://cantonese-scribe.vercel.app/api/v1/health/metrics",
+      "type": "HTTP",
+      "interval": 600,
+      "timeout": 30,
+      "http_method": "GET"
+    }
+  ],
+  "alert_contacts": [
+    {
+      "type": "email",
+      "value": "admin@cantonese-scribe.com"
+    },
+    {
+      "type": "slack",
+      "value": "SLACK_WEBHOOK_URL"
+    }
+  ],
+  "public_status_page": {
+    "enabled": true,
+    "friendly_name": "CantoneseScribe Status",
+    "custom_domain": "status.cantonese-scribe.com"
+  }
+}

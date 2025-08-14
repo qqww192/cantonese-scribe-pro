@@ -28,11 +28,23 @@ class Settings(BaseSettings):
     database_url: Optional[str] = None
     supabase_url: Optional[str] = None
     supabase_key: Optional[str] = None
+    supabase_service_key: Optional[str] = None
     
     # External APIs
     openai_api_key: Optional[str] = None
     google_cloud_credentials: Optional[str] = None
     google_translate_api_key: Optional[str] = None
+    google_application_credentials: Optional[str] = None
+    
+    # Redis/Queue Configuration
+    redis_url: Optional[str] = None
+    redis_password: Optional[str] = None
+    queue_name: str = "transcription_queue"
+    
+    # Stripe Configuration
+    stripe_public_key: Optional[str] = None
+    stripe_secret_key: Optional[str] = None
+    stripe_webhook_secret: Optional[str] = None
     
     # File Storage
     max_file_size: int = 100 * 1024 * 1024  # 100MB

@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
@@ -10,12 +11,15 @@ import HistoryPage from '@/components/HistoryPage';
 import SettingsPage from '@/components/SettingsPage';
 import UsagePage from '@/components/UsagePage';
 import VideoProcessPage from '@/components/VideoProcessPage';
+import CheckoutPage from '@/components/CheckoutPage';
+import OnboardingFlow, { useOnboarding } from '@/components/OnboardingFlow';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = localStorage.getItem('authToken');
+  const { isAuthenticated } = useAuth();
   
-  if (!isAuthenticated) {
+  if (!isAuthenticated()) {
     return <Navigate to="/auth" replace />;
   }
   
@@ -24,16 +28,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Home Page Component - Updated navigation and functionality
 const HomePage = () => {
-  const isAuthenticated = localStorage.getItem('authToken');
+  const { isAuthenticated, user } = useAuth();
   
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      {isAuthenticated && (
+      {isAuthenticated() && user && (
         <div className="bg-green-50 border-b border-green-200 px-4 py-2">
           <div className="max-w-6xl mx-auto">
             <p className="text-green-800 text-sm">
-              ✅ Successfully logged in! Current URL: <span className="font-mono">{window.location.href}</span>
+              ✅ Welcome back, {user.name}! You have {user.usage_quota - user.usage_count} credits remaining.
             </p>
           </div>
         </div>
@@ -47,8 +51,31 @@ const HomePage = () => {
 };
 
 function App() {
+  const { isAuthenticated } = useAuth();
+  const { hasCompletedOnboarding, completeOnboarding } = useOnboarding();
+  
+  // Setup token refresh on app initialization
+  useEffect(() => {
+    if (isAuthenticated()) {
+      // Setup automatic token refresh
+      import('@/services/authService').then(({ authService }) => {
+        authService.setupTokenRefresh();
+      });
+    }
+  }, [isAuthenticated]);
+  
+  // Show onboarding for new authenticated users
+  const shouldShowOnboarding = isAuthenticated() && !hasCompletedOnboarding;
+
   return (
     <Router>
+      {shouldShowOnboarding && (
+        <OnboardingFlow
+          onComplete={completeOnboarding}
+          onSkip={completeOnboarding}
+        />
+      )}
+      
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
@@ -62,6 +89,14 @@ function App() {
         } />
         
         <Route path="/auth" element={<LoginPage />} />
+        
+        <Route path="/checkout" element={
+          <ProtectedRoute>
+            <div className="min-h-screen bg-gray-50">
+              <CheckoutPage />
+            </div>
+          </ProtectedRoute>
+        } />
 
         {/* Protected Routes - No Dashboard */}
         <Route path="/usage" element={

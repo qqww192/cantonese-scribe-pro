@@ -1,0 +1,63 @@
+{
+  "datadog": {
+    "apm": {
+      "enabled": true,
+      "service_name": "cantonese-scribe",
+      "env": "production",
+      "sample_rate": 0.1,
+      "tracing": {
+        "enabled": true,
+        "propagation_style": "b3multi"
+      }
+    },
+    "logs": {
+      "enabled": true,
+      "source": "vercel",
+      "service": "cantonese-scribe",
+      "parsing_rules": [
+        {
+          "name": "API requests",
+          "pattern": "\\[(?P<timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z)\\] (?P<level>INFO|WARN|ERROR) (?P<message>.*)",
+          "attributes": ["timestamp", "level", "message"]
+        }
+      ]
+    },
+    "metrics": {
+      "custom_metrics": [
+        {
+          "name": "transcription.processing_time",
+          "type": "histogram",
+          "tags": ["environment", "provider"]
+        },
+        {
+          "name": "api.cost_per_request",
+          "type": "gauge",
+          "tags": ["endpoint", "user_tier"]
+        },
+        {
+          "name": "user.conversion_rate",
+          "type": "gauge",
+          "tags": ["signup_source", "plan"]
+        }
+      ]
+    },
+    "synthetic_monitoring": {
+      "tests": [
+        {
+          "name": "User Registration Flow",
+          "type": "browser",
+          "url": "https://cantonese-scribe.vercel.app/register",
+          "frequency": "15m",
+          "locations": ["us-east-1", "eu-west-1"]
+        },
+        {
+          "name": "Transcription Upload Flow",
+          "type": "api",
+          "url": "https://cantonese-scribe.vercel.app/api/v1/transcription/upload",
+          "method": "POST",
+          "frequency": "30m"
+        }
+      ]
+    }
+  }
+}

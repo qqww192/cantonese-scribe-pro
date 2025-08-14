@@ -11,6 +11,7 @@ import json
 from core.config import get_settings
 from core.logging import get_logger
 from core.exceptions import ExternalAPIError, ProcessingError
+from services.retry_service import with_api_retry
 
 logger = get_logger(__name__)
 
@@ -23,6 +24,7 @@ class WhisperService:
         self.api_url = "https://api.openai.com/v1/audio/transcriptions"
         self.max_file_size = 25 * 1024 * 1024  # 25MB limit for Whisper API
     
+    @with_api_retry("whisper", max_attempts=3)
     async def transcribe(
         self,
         audio_path: Path,

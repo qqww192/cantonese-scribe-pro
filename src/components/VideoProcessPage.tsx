@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { useDropzone } from 'react-dropzone';
 import { 
   Play, 
   Download, 
@@ -11,175 +14,384 @@ import {
   CheckCircle,
   AlertCircle,
   Copy,
-  ExternalLink
+  ExternalLink,
+  Upload,
+  X,
+  RefreshCw,
+  Star
 } from "lucide-react";
+import { useTranscription, TranscriptionJob, JobStatus, ExportFormat, ProgressUpdate } from '@/services/transcriptionService';
+import { useFileService, FileUploadResponse } from '@/services/fileService';
+import { useAuth } from '@/contexts/AuthContext';
+import { APIError, ValidationError } from '@/services/api';
+import { useDownload } from '@/services/downloadService';
+import { useFeedback } from '@/services/feedbackService';
+import VirtualizedTranscriptionViewer from './VirtualizedTranscriptionViewer';
+import DownloadProgressIndicator from './DownloadProgressIndicator';
+import FeedbackRatingSystem from './FeedbackRatingSystem';
+
+interface ProcessingState {
+  isProcessing: boolean;
+  progress: number;
+  stage: string;
+  message: string;
+}
 
 const VideoProcessPage = () => {
+  // Core state
   const [url, setUrl] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [result, setResult] = useState(null);
+  const [uploadedFile, setUploadedFile] = useState<FileUploadResponse | null>(null);
+  const [currentJob, setCurrentJob] = useState<TranscriptionJob | null>(null);
+  const [processingState, setProcessingState] = useState<ProcessingState>({
+    isProcessing: false,
+    progress: 0,
+    stage: '',
+    message: ''
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  
+  // Services
+  const {
+    startTranscription,
+    getJobStatus,
+    subscribeToProgress,
+    unsubscribeFromProgress,
+    downloadTranscription,
+    formatTime,
+    getConfidenceInfo,
+    downloadAsFile,
+    generateExportContent
+  } = useTranscription();
+  
+  const {
+    validateFile,
+    uploadFile,
+    validateYouTubeURL,
+    getYouTubeMetadata,
+    formatFileSize,
+    createDropHandlers
+  } = useFileService();
+  
+  const { user } = useAuth();
+  const { activeDownloads, downloadGenerated, cancelDownload, cancelAllDownloads } = useDownload();
+  const { submitFeedback } = useFeedback();
+  
+  // Refs for cleanup
+  const wsUnsubscribe = useRef<(() => void) | null>(null);
 
-  // Mock transcription data
-  const mockTranscription = [
-    {
-      id: 1,
-      startTime: 0.5,
-      endTime: 3.2,
-      chinese: "大家好，歡迎收看今日新聞",
-      yale: "daai6 gaa1 hou2, fun1 ying4 sau1 toi2 gam1 jat6 san1 man4",
-      jyutping: "daai6 gaa1 hou2, fun1 jing4 sau1 toi2 gam1 jat6 san1 man4",
-      english: "Hello everyone, welcome to today's news",
-      confidence: 0.92
-    },
-    {
-      id: 2,
-      startTime: 3.2,
-      endTime: 7.8,
-      chinese: "今日我哋會討論香港嘅最新發展",
-      yale: "gam1 jat6 ngo5 dei6 wui5 tou2 leon6 hoeng1 gong2 ge3 zeui3 san1 faat3 zin2",
-      jyutping: "gam1 jat6 ngo5 dei6 wui5 tou2 leon6 hoeng1 gong2 ge3 zeui3 san1 faat3 zin2",
-      english: "Today we will discuss the latest developments in Hong Kong",
-      confidence: 0.88
-    },
-    {
-      id: 3,
-      startTime: 7.8,
-      endTime: 11.5,
-      chinese: "聲調係廣東話最重要嘅部分",
-      yale: "sing1 diu6 hai6 gwong2 dung1 waa2 zeui3 zung6 yiu3 ge3 bou6 fan6",
-      jyutping: "sing1 diu6 hai6 gwong2 dung1 waa2 zeui3 zung6 jiu3 ge3 bou6 fan6",
-      english: "Tones are the most important part of Cantonese",
-      confidence: 0.89
-    },
-    {
-      id: 4,
-      startTime: 11.8,
-      endTime: 15.5,
-      chinese: "我哋有九個聲調，每個都有唔同嘅用法",
-      yale: "ngo5 dei6 yau5 gau2 go3 seng1 diu6, mui5 go3 dou1 yau5 m4 tung4 ge3 yung6 faat3",
-      jyutping: "ngo5 dei6 jau5 gau2 go3 sing1 diu6, mui5 go3 dou1 jau5 m4 tung4 ge3 jung6 faat3",
-      english: "We have nine tones, each with different uses",
-      confidence: 0.87
-    },
-    {
-      id: 5,
-      startTime: 15.5,
-      endTime: 19.3,
-      chinese: "初學者要多加練習，熟能生巧",
-      yale: "cho1 hok6 je2 yiu3 do1 gaa1 lin6 jaap6, suk6 nang4 sang1 haau2",
-      jyutping: "co1 hok6 ze2 jiu3 do1 gaa1 lin6 zaap6, suk6 nang4 saang1 haau2",
-      english: "Beginners need to practice more, practice makes perfect",
-      confidence: 0.91
-    }
-  ];
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (wsUnsubscribe.current) {
+        wsUnsubscribe.current();
+      }
+    };
+  }, []);
 
   // Get URL from query params on page load
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const videoUrl = urlParams.get('video');
+    const jobId = urlParams.get('job');
+    
     if (videoUrl) {
       setUrl(decodeURIComponent(videoUrl));
-      // Auto-start processing if URL is provided
-      handleProcess();
+    }
+    
+    if (jobId) {
+      // Load existing job
+      loadExistingJob(jobId);
     }
   }, []);
+  
+  // Load existing job by ID
+  const loadExistingJob = async (jobId: string) => {
+    try {
+      const job = await getJobStatus(jobId);
+      setCurrentJob(job);
+      
+      // Subscribe to updates if still processing
+      if (job.status === JobStatus.PROCESSING || job.status === JobStatus.PENDING) {
+        subscribeToJobUpdates(jobId);
+      }
+    } catch (error) {
+      console.error('Failed to load job:', error);
+      setError('Failed to load transcription job');
+    }
+  };
 
-  const handleUrlSubmit = (e) => {
+  // Handle URL submission
+  const handleUrlSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
-    handleProcess();
-  };
-
-  const handleProcess = () => {
-    if (!url.trim()) return;
     
-    setIsProcessing(true);
-    setProgress(0);
-    setResult(null);
-
-    // Simulate processing with progress updates
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 95) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setIsProcessing(false);
-            setResult({
-              url,
-              title: "Video Transcription Results",
-              duration: "4:32",
-              totalLines: mockTranscription.length,
-              avgConfidence: 0.89,
-              creditsUsed: 1,
-              transcription: mockTranscription
-            });
-          }, 500);
-          return 100;
-        }
-        return prev + Math.random() * 15;
-      });
-    }, 200);
-  };
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const getConfidenceColor = (confidence) => {
-    if (confidence >= 0.9) return "bg-green-100 text-green-800";
-    if (confidence >= 0.8) return "bg-yellow-100 text-yellow-800";
-    return "bg-red-100 text-red-800";
-  };
-
-  const getConfidenceText = (confidence) => {
-    if (confidence >= 0.9) return "Excellent";
-    if (confidence >= 0.8) return "Good";
-    return "Fair";
-  };
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    alert("Copied to clipboard!");
-  };
-
-  const exportFormat = (format) => {
-    let content = "";
+    setError(null);
     
-    switch(format) {
-      case 'SRT':
-        content = result.transcription.map((item, index) => 
-          `${index + 1}\n${formatTime(item.startTime)} --> ${formatTime(item.endTime)}\n${item.chinese}\n${item.english}\n`
-        ).join('\n');
-        break;
-      case 'VTT':
-        content = "WEBVTT\n\n" + result.transcription.map(item => 
-          `${formatTime(item.startTime)} --> ${formatTime(item.endTime)}\n${item.chinese}\n${item.english}\n`
-        ).join('\n');
-        break;
-      case 'TXT':
-        content = result.transcription.map(item => 
-          `[${formatTime(item.startTime)}] ${item.chinese} (${item.english})`
-        ).join('\n');
-        break;
-      case 'CSV':
-        content = "Start Time,End Time,Chinese,Yale,Jyutping,English,Confidence\n" + 
-          result.transcription.map(item => 
-            `${item.startTime},${item.endTime},"${item.chinese}","${item.yale}","${item.jyutping}","${item.english}",${item.confidence}`
-          ).join('\n');
-        break;
+    // Validate YouTube URL
+    const validation = validateYouTubeURL(url);
+    if (!validation.isValid) {
+      setError(validation.error || 'Invalid YouTube URL');
+      return;
     }
     
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `transcription.${format.toLowerCase()}`;
-    a.click();
-    URL.revokeObjectURL(url);
+    await startProcessing({ youtube_url: url });
   };
+
+  // Handle file upload
+  const handleFileUpload = async (files: File[]) => {
+    if (files.length === 0) return;
+    
+    const file = files[0];
+    setError(null);
+    
+    // Validate file
+    const validation = validateFile(file);
+    if (!validation.isValid) {
+      setError(validation.error?.message || 'Invalid file');
+      return;
+    }
+    
+    try {
+      // Upload file with progress
+      const uploadedFile = await uploadFile(file, (progress) => {
+        setUploadProgress(progress);
+      });
+      
+      setUploadedFile(uploadedFile);
+      setUploadProgress(0);
+      
+      // Start processing
+      await startProcessing({ file_id: uploadedFile.file_id });
+    } catch (error) {
+      console.error('File upload failed:', error);
+      setError(error instanceof APIError ? error.message : 'File upload failed');
+      setUploadProgress(0);
+    }
+  };
+  
+  // Start transcription processing
+  const startProcessing = async (request: { file_id?: string; youtube_url?: string }) => {
+    try {
+      setProcessingState({
+        isProcessing: true,
+        progress: 0,
+        stage: 'Starting',
+        message: 'Preparing transcription job...'
+      });
+      
+      // Start transcription job
+      const { job_id } = await startTranscription({
+        ...request,
+        options: {
+          language: 'yue',
+          include_yale: true,
+          include_jyutping: true,
+          include_english: true,
+          confidence_threshold: 0.7
+        }
+      });
+      
+      // Get initial job status
+      const job = await getJobStatus(job_id);
+      setCurrentJob(job);
+      
+      // Subscribe to real-time updates
+      await subscribeToJobUpdates(job_id);
+      
+    } catch (error) {
+      console.error('Failed to start transcription:', error);
+      setError(error instanceof APIError ? error.message : 'Failed to start transcription');
+      setProcessingState({
+        isProcessing: false,
+        progress: 0,
+        stage: '',
+        message: ''
+      });
+    }
+  };
+  
+  // Subscribe to WebSocket updates
+  const subscribeToJobUpdates = async (jobId: string) => {
+    try {
+      wsUnsubscribe.current = await subscribeToProgress(
+        jobId,
+        (update: ProgressUpdate) => {
+          setProcessingState({
+            isProcessing: update.status === JobStatus.PROCESSING || update.status === JobStatus.PENDING,
+            progress: update.progress,
+            stage: update.stage || getStageFromStatus(update.status),
+            message: update.message || getMessageFromStatus(update.status, update.progress)
+          });
+          
+          // Update job status
+          if (currentJob) {
+            setCurrentJob(prev => prev ? {
+              ...prev,
+              status: update.status,
+              progress: update.progress,
+              error_message: update.error
+            } : prev);
+          }
+          
+          // Handle completion
+          if (update.status === JobStatus.COMPLETED) {
+            refreshJobStatus(jobId);
+          } else if (update.status === JobStatus.FAILED) {
+            setError(update.error || 'Transcription failed');
+          }
+        },
+        (error) => {
+          console.error('WebSocket error:', error);
+          // Fall back to polling
+          startPollingJobStatus(jobId);
+        }
+      );
+    } catch (error) {
+      console.error('Failed to subscribe to updates:', error);
+      // Fall back to polling
+      startPollingJobStatus(jobId);
+    }
+  };
+  
+  // Fallback polling for job status
+  const startPollingJobStatus = (jobId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const job = await getJobStatus(jobId);
+        setCurrentJob(job);
+        
+        setProcessingState({
+          isProcessing: job.status === JobStatus.PROCESSING || job.status === JobStatus.PENDING,
+          progress: job.progress,
+          stage: getStageFromStatus(job.status),
+          message: getMessageFromStatus(job.status, job.progress)
+        });
+        
+        // Stop polling when complete
+        if (job.status === JobStatus.COMPLETED || job.status === JobStatus.FAILED || job.status === JobStatus.CANCELLED) {
+          clearInterval(pollInterval);
+          
+          if (job.status === JobStatus.FAILED) {
+            setError(job.error_message || 'Transcription failed');
+          }
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    }, 2000); // Poll every 2 seconds
+    
+    // Cleanup after 10 minutes
+    setTimeout(() => clearInterval(pollInterval), 600000);
+  };
+  
+  // Refresh job status
+  const refreshJobStatus = async (jobId: string) => {
+    try {
+      const job = await getJobStatus(jobId);
+      setCurrentJob(job);
+    } catch (error) {
+      console.error('Failed to refresh job status:', error);
+    }
+  };
+  
+  // Helper functions
+  const getStageFromStatus = (status: JobStatus): string => {
+    switch (status) {
+      case JobStatus.PENDING: return 'Queued';
+      case JobStatus.PROCESSING: return 'Processing';
+      case JobStatus.COMPLETED: return 'Complete';
+      case JobStatus.FAILED: return 'Failed';
+      case JobStatus.CANCELLED: return 'Cancelled';
+      default: return '';
+    }
+  };
+  
+  const getMessageFromStatus = (status: JobStatus, progress: number): string => {
+    if (status === JobStatus.PROCESSING) {
+      if (progress < 30) return 'Downloading and analyzing media...';
+      if (progress < 70) return 'Processing speech recognition...';
+      if (progress < 95) return 'Generating romanization and translations...';
+      return 'Finalizing results...';
+    }
+    
+    switch (status) {
+      case JobStatus.PENDING: return 'Job is queued for processing';
+      case JobStatus.COMPLETED: return 'Transcription completed successfully';
+      case JobStatus.FAILED: return 'Transcription failed';
+      case JobStatus.CANCELLED: return 'Transcription was cancelled';
+      default: return '';
+    }
+  };
+
+  // Drag and drop handlers
+  const dropHandlers = createDropHandlers(handleFileUpload, (error) => {
+    setError(error.message);
+  });
+
+  // Copy text to clipboard
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // You could add a toast notification here
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+    }
+  };
+
+  // Export and download functions
+  const handleExport = async (format: ExportFormat) => {
+    if (!currentJob?.result?.items) return;
+    
+    try {
+      const content = generateExportContent(currentJob.result.items, format);
+      const filename = `transcription-${currentJob.job_id}.${format}`;
+      const mimeType = {
+        [ExportFormat.SRT]: 'text/plain',
+        [ExportFormat.VTT]: 'text/vtt',
+        [ExportFormat.TXT]: 'text/plain',
+        [ExportFormat.CSV]: 'text/csv',
+        [ExportFormat.JSON]: 'application/json'
+      }[format] || 'text/plain';
+      
+      downloadGenerated(content, filename, mimeType);
+    } catch (error) {
+      console.error('Export failed:', error);
+      setError('Failed to export transcription');
+    }
+  };
+
+  // Reset state for new processing
+  const resetProcessing = () => {
+    setCurrentJob(null);
+    setUrl('');
+    setUploadedFile(null);
+    setProcessingState({
+      isProcessing: false,
+      progress: 0,
+      stage: '',
+      message: ''
+    });
+    setError(null);
+    setUploadProgress(0);
+    
+    if (wsUnsubscribe.current) {
+      wsUnsubscribe.current();
+      wsUnsubscribe.current = null;
+    }
+  };
+  
+  // Get dropzone props
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: handleFileUpload,
+    accept: {
+      'audio/*': ['.mp3', '.wav', '.m4a', '.flac', '.ogg'],
+      'video/*': ['.mp4', '.webm', '.mov', '.avi']
+    },
+    maxFiles: 1,
+    maxSize: 500 * 1024 * 1024, // 500MB
+    disabled: processingState.isProcessing
+  });
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -187,9 +399,22 @@ const VideoProcessPage = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Video Transcription</h1>
           <p className="text-gray-600 mt-2">
-            Process your Cantonese videos and get accurate transcriptions
+            Process your Cantonese videos and audio files for accurate transcriptions
           </p>
+          {user && (
+            <p className="text-sm text-gray-500 mt-1">
+              Credits remaining: {user.usage_quota - user.usage_count}
+            </p>
+          )}
         </div>
+        
+        {/* Error display */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         {/* URL Input Form */}
         {!result && (
@@ -345,65 +570,55 @@ const VideoProcessPage = () => {
             {/* Transcription Results */}
             <Card>
               <CardHeader>
-                <CardTitle>Transcription Results</CardTitle>
-                <CardDescription>
-                  Chinese characters, romanization, and English translations with timestamps
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {result.transcription.map((item) => (
-                    <div key={item.id} className="p-4 border rounded-lg hover:bg-gray-50 group">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-mono text-gray-500">
-                            {formatTime(item.startTime)} - {formatTime(item.endTime)}
-                          </span>
-                          <Badge 
-                            variant="outline" 
-                            className={`text-xs ${getConfidenceColor(item.confidence)}`}
-                          >
-                            {getConfidenceText(item.confidence)} ({Math.round(item.confidence * 100)}%)
-                          </Badge>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => copyToClipboard(`${item.chinese}\n${item.yale}\n${item.jyutping}\n${item.english}`)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div className="text-lg font-medium text-gray-900">
-                          {item.chinese}
-                        </div>
-                        <div className="text-sm text-blue-600 font-mono">
-                          Yale: {item.yale}
-                        </div>
-                        <div className="text-sm text-green-600 font-mono">
-                          Jyutping: {item.jyutping}
-                        </div>
-                        <div className="text-sm text-gray-600 italic">
-                          {item.english}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Transcription Results</CardTitle>
+                    <CardDescription>
+                      Chinese characters, romanization, and English translations with timestamps
+                    </CardDescription>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {currentJob.result.items.length} segments
+                  </div>
                 </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <VirtualizedTranscriptionViewer
+                  items={currentJob.result.items}
+                  height={Math.min(600, Math.max(400, currentJob.result.items.length * 120))}
+                  onCopy={copyToClipboard}
+                  showTimestamps={true}
+                  showConfidence={true}
+                  showSpeaker={true}
+                  enableSearch={true}
+                  enableNavigation={true}
+                  className="p-4"
+                />
               </CardContent>
             </Card>
 
+            {/* Feedback System */}
+            <FeedbackRatingSystem
+              jobId={currentJob.job_id}
+              onSubmit={async (feedbackData) => {
+                await submitFeedback({
+                  transcriptionJobId: feedbackData.transcriptionJobId,
+                  ratings: {
+                    overall: feedbackData.overallRating,
+                    accuracy: feedbackData.accuracyRating,
+                    speed: feedbackData.speedRating,
+                    usefulness: feedbackData.usefulnessRating
+                  },
+                  feedback: feedbackData.feedback,
+                  reportedIssues: feedbackData.reportIssues
+                });
+              }}
+            />
+            
             {/* Actions */}
             <div className="flex gap-3">
-              <Button onClick={() => {
-                setResult(null);
-                setUrl('');
-                setProgress(0);
-              }}>
-                Process Another Video
+              <Button onClick={resetProcessing}>
+                Process Another File
               </Button>
               <Button 
                 variant="outline"
@@ -414,6 +629,50 @@ const VideoProcessPage = () => {
             </div>
           </div>
         )}
+        
+        {/* Failed State */}
+        {currentJob && currentJob.status === JobStatus.FAILED && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-red-600">
+                <AlertCircle className="h-5 w-5" />
+                Transcription Failed
+              </CardTitle>
+              <CardDescription>
+                There was an error processing your media file
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {currentJob.error_message && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{currentJob.error_message}</AlertDescription>
+                  </Alert>
+                )}
+                
+                <div className="flex gap-3">
+                  <Button onClick={resetProcessing}>
+                    Try Again
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.location.href = '/history'}
+                  >
+                    View History
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Download Progress Indicator */}
+        <DownloadProgressIndicator
+          downloads={activeDownloads}
+          onCancel={cancelDownload}
+          onCancelAll={cancelAllDownloads}
+          showMini={true}
+        />
       </div>
     </div>
   );
