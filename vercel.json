@@ -6,6 +6,7 @@
   "framework": "vite",
   "functions": {
     "api/index.py": {
+      "runtime": "python3.9",
       "maxDuration": 300,
       "memory": 1024
     }

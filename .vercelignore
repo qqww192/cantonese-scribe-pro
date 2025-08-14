@@ -1,0 +1,73 @@
+# Python virtual environment
+venv/
+.venv/
+env/
+.env/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git files
+.git/
+.gitignore
+
+# Development files
+*.log
+.coverage
+.pytest_cache/
+
+# Local environment files
+.env.local
+.env.development
+.env.test
+
+# Documentation and config files that shouldn't be functions
+*.md
+*.json
+*.yaml
+*.yml
+*.toml
+*.ini
+*.cfg
+
+# Health check script (not a serverless function)
+health-check-advanced.py
+
+# Database and scripts directories
+database/
+scripts/
+
+# Deployment files
+deployment-*.log
+deployment-summary-*.md
+alerts-config.json
+dashboard-config.json
+datadog-config.json
+monitoring-config.json
+mixpanel-events.json
+sentry-config.js
+uptimerobot-monitors.json
+
+# Build outputs and dependencies
+node_modules/
+dist/
+build/
+
+# Python package markers and subdirectories (not serverless functions)
+api/__init__.py
+api/app/
