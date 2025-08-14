@@ -3,7 +3,7 @@
  * Provides consistent loading states and error handling across components
  */
 
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 
 interface LoadingState {
   isLoading: boolean;

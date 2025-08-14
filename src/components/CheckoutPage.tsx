@@ -167,9 +167,9 @@ const CheckoutPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center\">
-          <Loader2 className="h-8 w-8 animate-spin text-orange-600 mx-auto mb-4\" />
-          <p className="text-gray-600\">Loading payment form...</p>
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-orange-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading payment form...</p>
         </div>
       </div>
     );
@@ -177,15 +177,15 @@ const CheckoutPage: React.FC = () => {
   
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center\">
-        <Card className="max-w-md w-full\">
-          <CardContent className="pt-6\">
-            <div className="text-center\">
-              <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4\" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2\">Payment Successful!</h2>\n              <p className="text-gray-600 mb-6\">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h2>\n              <p className="text-gray-600 mb-6">
                 Your subscription has been activated. You'll be redirected shortly.
               </p>
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600 mx-auto\"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600 mx-auto"></div>
             </div>
           </CardContent>
         </Card>
@@ -194,74 +194,74 @@ const CheckoutPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50\">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8\">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8\">
+        <div className="mb-8">
           <Button 
-            variant=\"ghost\" 
+            variant="ghost" 
             onClick={() => navigate('/pricing')}
-            className="mb-4\"
+            className="mb-4"
           >
-            <ArrowLeft className="h-4 w-4 mr-2\" />
+            <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Pricing
           </Button>
           
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900\">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
             Complete Your Subscription
           </h1>
-          <p className="text-gray-600 mt-2\">
+          <p className="text-gray-600 mt-2">
             Secure payment powered by Stripe
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8\">
+        <div className="grid lg:grid-cols-2 gap-8">
           {/* Order Summary */}
-          <div className="space-y-6\">
+          <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2\">
-                  <CheckCircle className="h-5 w-5 text-green-600\" />
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
                   Subscription Summary
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4\">
-                <div className="flex items-center justify-between py-3 border-b\">
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between py-3 border-b">
                   <div>
-                    <div className="font-medium text-gray-900\">CantoneseScribe Pro</div>
-                    <div className="text-sm text-gray-500\">Monthly subscription</div>
+                    <div className="font-medium text-gray-900">CantoneseScribe Pro</div>
+                    <div className="text-sm text-gray-500">Monthly subscription</div>
                   </div>
-                  <div className="text-right\">
-                    <div className="font-semibold text-gray-900\">$9.99</div>
-                    <div className="text-sm text-gray-500\">/month</div>
+                  <div className="text-right">
+                    <div className="font-semibold text-gray-900">$9.99</div>
+                    <div className="text-sm text-gray-500">/month</div>
                   </div>
                 </div>
                 
-                <div className="space-y-2\">
-                  <div className="flex items-center gap-2 text-sm text-gray-600\">
-                    <CheckCircle className="h-4 w-4 text-green-500\" />
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
                     500 credits per month
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600\">
-                    <CheckCircle className="h-4 w-4 text-green-500\" />
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
                     All export formats (SRT, VTT, CSV, JSON)
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600\">
-                    <CheckCircle className="h-4 w-4 text-green-500\" />
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
                     Yale + Jyutping romanization
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600\">
-                    <CheckCircle className="h-4 w-4 text-green-500\" />
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
                     Priority processing
                   </div>
                 </div>
                 
-                <div className="pt-4 border-t\">
-                  <div className="flex items-center justify-between text-lg font-semibold\">
+                <div className="pt-4 border-t">
+                  <div className="flex items-center justify-between text-lg font-semibold">
                     <span>Total</span>
                     <span>$9.99/month</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1\">
+                  <p className="text-xs text-gray-500 mt-1">
                     Billed monthly. Cancel anytime.
                   </p>
                 </div>
@@ -270,19 +270,19 @@ const CheckoutPage: React.FC = () => {
 
             {/* Security Features */}
             <Card>
-              <CardContent className="pt-6\">
-                <div className="space-y-3\">
-                  <div className="flex items-center gap-3\">
-                    <Shield className="h-5 w-5 text-green-600\" />
-                    <span className="text-sm text-gray-700\">256-bit SSL encryption</span>
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Shield className="h-5 w-5 text-green-600" />
+                    <span className="text-sm text-gray-700">256-bit SSL encryption</span>
                   </div>
-                  <div className="flex items-center gap-3\">
-                    <CreditCard className="h-5 w-5 text-green-600\" />
-                    <span className="text-sm text-gray-700\">PCI DSS compliant</span>
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="h-5 w-5 text-green-600" />
+                    <span className="text-sm text-gray-700">PCI DSS compliant</span>
                   </div>
-                  <div className="flex items-center gap-3\">
-                    <CheckCircle className="h-5 w-5 text-green-600\" />
-                    <span className="text-sm text-gray-700\">30-day money-back guarantee</span>
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <span className="text-sm text-gray-700">30-day money-back guarantee</span>
                   </div>
                 </div>
               </CardContent>
@@ -293,40 +293,40 @@ const CheckoutPage: React.FC = () => {
           <div>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2\">
-                  <CreditCard className="h-5 w-5\" />
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
                   Payment Method
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {error && (
-                  <Alert variant=\"destructive\" className="mb-6\">
-                    <AlertCircle className="h-4 w-4\" />
+                  <Alert variant="destructive" className="mb-6">
+                    <AlertCircle className="h-4 w-4" />
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
                 
                 {user && (
-                  <div className="mb-6 p-4 bg-gray-50 rounded-lg\">
-                    <div className="text-sm text-gray-600 mb-1\">Subscribing as:</div>
-                    <div className="font-medium text-gray-900\">{user.name}</div>
-                    <div className="text-sm text-gray-600\">{user.email}</div>
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <div className="text-sm text-gray-600 mb-1">Subscribing as:</div>
+                    <div className="font-medium text-gray-900">{user.name}</div>
+                    <div className="text-sm text-gray-600">{user.email}</div>
                   </div>
                 )}
                 
                 {stripe && elements && Elements && PaymentElement ? (
                   <Elements stripe={stripe} options={{ clientSecret }}>
-                    <form onSubmit={handleSubmit} className="space-y-6\">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                       <PaymentElement />
                       
                       <Button
-                        type=\"submit\"
+                        type="submit"
                         disabled={!stripe || processing}
-                        className="w-full\"
+                        className="w-full"
                       >
                         {processing ? (
                           <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin\" />
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                             Processing...
                           </>
                         ) : (
@@ -334,16 +334,16 @@ const CheckoutPage: React.FC = () => {
                         )}
                       </Button>
                       
-                      <p className="text-xs text-gray-500 text-center\">
+                      <p className="text-xs text-gray-500 text-center">
                         By subscribing, you agree to our Terms of Service and Privacy Policy.
                         You can cancel your subscription at any time.
                       </p>
                     </form>
                   </Elements>
                 ) : (
-                  <div className="text-center py-8\">
-                    <Loader2 className="h-8 w-8 animate-spin text-orange-600 mx-auto mb-4\" />
-                    <p className="text-gray-600\">Loading payment form...</p>
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-orange-600 mx-auto mb-4" />
+                    <p className="text-gray-600">Loading payment form...</p>
                   </div>
                 )}
               </CardContent>
