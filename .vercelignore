@@ -36,14 +36,21 @@ Thumbs.db
 .env.development
 .env.test
 
-# Documentation and config files that shouldn't be functions
+# Documentation files
 *.md
-*.json
 *.yaml
 *.yml
 *.toml
 *.ini
 *.cfg
+
+# Config files that shouldn't be functions (exclude package.json, tsconfig.json, etc.)
+alerts-config.json
+dashboard-config.json
+datadog-config.json
+monitoring-config.json
+mixpanel-events.json
+railway.json
 
 # Health check script (not a serverless function)
 health-check-advanced.py
@@ -55,11 +62,6 @@ scripts/
 # Deployment files
 deployment-*.log
 deployment-summary-*.md
-alerts-config.json
-dashboard-config.json
-datadog-config.json
-monitoring-config.json
-mixpanel-events.json
 sentry-config.js
 uptimerobot-monitors.json
 
