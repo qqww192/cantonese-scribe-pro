@@ -2,7 +2,7 @@
 Vercel serverless function entry point for CantoneseScribe API.
 """
 
-from app.main import app
+from app.main import app as fastapi_app
 
 # Export the FastAPI app for Vercel
-handler = app
+app = fastapi_app
