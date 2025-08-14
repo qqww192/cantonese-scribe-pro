@@ -5,8 +5,7 @@
   "installCommand": "npm install && pip install -r requirements.txt",
   "framework": "vite",
   "functions": {
-    "api/**/*.py": {
-      "runtime": "python3.12",
+    "api/index.py": {
       "maxDuration": 300,
       "memory": 1024
     }
@@ -33,7 +32,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "destination": "/api/index.py"
     },
     {
       "source": "/(.*)",
