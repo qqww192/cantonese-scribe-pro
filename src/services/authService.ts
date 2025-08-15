@@ -136,7 +136,9 @@ class AuthService {
     this.updateAuthState({ loading: true, error: null });
 
     try {
+      console.log('Attempting login with credentials:', { email: credentials.email });
       const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
+      console.log('Login response received:', response);
       
       // Store authentication data
       authUtils.setToken(response.access_token);
@@ -152,6 +154,7 @@ class AuthService {
 
       return response;
     } catch (error) {
+      console.error('Login error:', error);
       const errorMessage = error instanceof APIError || error instanceof ValidationError 
         ? error.message 
         : 'Login failed. Please try again.';
@@ -181,11 +184,13 @@ class AuthService {
         });
       }
 
+      console.log('Attempting registration with data:', { name: userData.name, email: userData.email });
       const response = await apiClient.post<LoginResponse>('/auth/register', {
         name: userData.name,
         email: userData.email,
         password: userData.password
       });
+      console.log('Registration response received:', response);
 
       // Store authentication data
       authUtils.setToken(response.access_token);

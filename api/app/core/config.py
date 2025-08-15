@@ -21,8 +21,8 @@ class Settings(BaseSettings):
     
     # API Configuration
     api_prefix: str = "/api/v1"
-    allowed_origins: List[str] = ["http://localhost:3000", "http://localhost:8080"]
-    allowed_hosts: List[str] = ["localhost", "127.0.0.1"]
+    allowed_origins: List[str] = ["http://localhost:3000", "http://localhost:8080", "https://*.vercel.app", "*"]
+    allowed_hosts: List[str] = ["localhost", "127.0.0.1", "*.vercel.app", "*"]
     
     # Database
     database_url: Optional[str] = None

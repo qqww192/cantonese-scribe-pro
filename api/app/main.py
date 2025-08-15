@@ -4,6 +4,7 @@ Main FastAPI application entry point.
 
 import os
 import logging
+from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -123,8 +124,8 @@ def create_application() -> FastAPI:
         enable_enforcement=settings.environment != "development"  # Disable enforcement in dev
     )
     
-    # Include API router
-    app.include_router(api_router)
+    # Include API router with prefix
+    app.include_router(api_router, prefix=settings.api_prefix)
     
     # Add comprehensive error handling
     add_error_handlers(app)
@@ -133,6 +134,22 @@ def create_application() -> FastAPI:
     @app.get("/health")
     async def health_check():
         return {"status": "healthy", "version": "1.0.0"}
+    
+    # Debug endpoint to test API connectivity
+    @app.get("/debug")
+    async def debug_info():
+        return {
+            "status": "ok",
+            "api_prefix": settings.api_prefix,
+            "environment": settings.environment,
+            "cors_origins": settings.allowed_origins,
+            "timestamp": datetime.utcnow().isoformat(),
+            "endpoints": {
+                "auth_login": f"{settings.api_prefix}/auth/login",
+                "auth_register": f"{settings.api_prefix}/auth/register",
+                "waitlist_signup": f"{settings.api_prefix}/waitlist/signup"
+            }
+        }
     
     return app
 

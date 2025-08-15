@@ -4,8 +4,20 @@
  */
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (
+  typeof window !== 'undefined' && window.location.origin ? 
+  `${window.location.origin}/api/v1` : 
+  '/api/v1'
+);
 const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000/ws';
+
+// Debug API URL
+console.log('API Configuration:', { 
+  API_BASE_URL, 
+  WS_BASE_URL, 
+  VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+  origin: typeof window !== 'undefined' ? window.location.origin : 'server'
+});
 
 // Error types
 export class APIError extends Error {

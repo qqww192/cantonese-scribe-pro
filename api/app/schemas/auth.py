@@ -24,13 +24,14 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
+    user: "UserResponse"
 
 
 class UserCreate(BaseModel):
     """User creation model."""
+    name: str
     email: EmailStr
     password: str
-    full_name: Optional[str] = None
     
     @validator('password')
     def password_length(cls, v):
@@ -42,8 +43,11 @@ class UserCreate(BaseModel):
 class UserResponse(BaseModel):
     """User response model."""
     user_id: str
+    name: str
     email: EmailStr
-    full_name: Optional[str] = None
+    subscription_plan: str = "free"
+    usage_quota: int = 30
+    usage_count: int = 0
     is_active: bool
     created_at: str
 
