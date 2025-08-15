@@ -8,7 +8,7 @@ import stripe
 import os
 
 # Set Stripe API key directly
-stripe.api_key = "sk_test_51RwLYuICypWYw6CLYeKTmc3wJF4jHEy45ZqKtlSfuIDA9qNpkxm1UmILQKNPCHk2y3MjTvssSAIvq6Xy0j6oN0Vp00IVxRFY76"
+stripe.api_key = "sk_test_***************"
 
 def test_stripe_connection():
     """Test basic Stripe API connection"""

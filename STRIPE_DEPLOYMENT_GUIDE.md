@@ -34,7 +34,7 @@ Set these environment variables in your Vercel project settings:
 ```bash
 # Stripe Configuration
 STRIPE_PUBLISHABLE_KEY=pk_test_51RwLYuICypWYw6CLcRdEWa8Xoke1TAmB4cUUAdYSQRmbKTbXXoWE2OhAFy4nKkFJE0ffhVDsPPNxDEVSZg4161pI00aFurMf3N
-STRIPE_SECRET_KEY=sk_test_51RwLYuICypWYw6CLYeKTmc3wJF4jHEy45ZqKtlSfuIDA9qNpkxm1UmILQKNPCHk2y3MjTvssSAIvq6Xy0j6oN0Vp00IVxRFY76
+STRIPE_SECRET_KEY=sk_test_***************
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_51RwLYuICypWYw6CLcRdEWa8Xoke1TAmB4cUUAdYSQRmbKTbXXoWE2OhAFy4nKkFJE0ffhVDsPPNxDEVSZg4161pI00aFurMf3N
 
 # Other Environment Variables (copy from .env.production)
