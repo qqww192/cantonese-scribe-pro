@@ -52,8 +52,8 @@ Your CantoneseScribe application is **live and ready for users**!
 ## 🔧 Monitoring & Maintenance
 
 ### Health Checks
-- **API Health**: `https://your-domain.vercel.app/health`
-- **Debug Info**: `https://your-domain.vercel.app/debug`
+- **API Health**: `https://cantonese-scribe-pro.vercel.app/health`
+- **Debug Info**: `https://cantonese-scribe-pro.vercel.app/debug`
 - **Service Status**: All green in Vercel dashboard
 
 ### Key Metrics to Watch

@@ -18,8 +18,8 @@ NODE_ENV=production
 DEBUG=false
 
 # API Configuration
-VITE_API_BASE_URL=https://your-domain.vercel.app/api/v1
-VITE_WS_BASE_URL=wss://your-domain.vercel.app/ws
+VITE_API_BASE_URL=https://cantonese-scribe-pro.vercel.app/api/v1
+VITE_WS_BASE_URL=wss://cantonese-scribe-pro.vercel.app/ws
 API_PREFIX=/api/v1
 ```
 
@@ -161,7 +161,7 @@ USAGE_RESET_TIMEZONE=UTC
 - [ ] **Test Mode**: Keep enabled for MVP
 - [ ] **Webhook Endpoint**: Configure when ready
   ```
-  https://your-domain.vercel.app/api/v1/payments/webhook
+  https://cantonese-scribe-pro.vercel.app/api/v1/payments/webhook
   ```
 - [ ] **Products**: Create Pro subscription products
 - [ ] **Pricing**: Set up monthly/annual pricing
