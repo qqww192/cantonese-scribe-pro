@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, EmailStr
 
 from ...dependencies import get_current_user
 from ....services.database_service import database_service
+from ....services.email_service import email_service
 from ....core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -122,6 +123,14 @@ async def signup_for_waitlist(
         
         # Get current position
         position = await database_service.get_waitlist_position(request.email, request.plan_id)
+        
+        # Send confirmation email
+        try:
+            await email_service.send_waitlist_confirmation_email(request.email)
+            logger.info(f"Waitlist confirmation email sent to {request.email}")
+        except Exception as email_error:
+            logger.warning(f"Failed to send confirmation email to {request.email}: {str(email_error)}")
+            # Don't fail the signup if email fails
         
         logger.info(f"Waitlist signup successful: {request.email} for {request.plan_id}")
         
@@ -291,16 +300,29 @@ async def send_waitlist_notification(
             segment=request.segment
         )
         
-        # TODO: Integrate with email service (SendGrid, etc.)
-        # For now, just log the notification
-        logger.info(f"Waitlist notification sent to {len(target_emails)} recipients")
-        logger.info(f"Subject: {request.subject}")
-        logger.info(f"Segment: {request.segment}, Plans: {request.plan_ids}")
+        # Send emails to waitlist members
+        sent_count = 0
+        failed_count = 0
+        
+        for email in target_emails:
+            try:
+                await email_service.send_email(
+                    to=email,
+                    subject=request.subject,
+                    html_content=f"<p>{request.message}</p>"
+                )
+                sent_count += 1
+            except Exception as email_error:
+                logger.warning(f"Failed to send notification to {email}: {str(email_error)}")
+                failed_count += 1
+        
+        logger.info(f"Waitlist notification results: {sent_count} sent, {failed_count} failed")
         
         return {
             "success": True,
-            "sent_count": len(target_emails),
-            "message": f"Notification sent to {len(target_emails)} recipients"
+            "sent_count": sent_count,
+            "failed_count": failed_count,
+            "message": f"Notification sent to {sent_count} recipients"
         }
         
     except HTTPException:

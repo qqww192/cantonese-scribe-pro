@@ -32,8 +32,10 @@ class Settings(BaseSettings):
     
     # External APIs
     openai_api_key: Optional[str] = None
+    google_cloud_project_id: Optional[str] = None
     google_cloud_credentials: Optional[str] = None
     google_translate_api_key: Optional[str] = None
+    google_gemini_api_key: Optional[str] = None
     google_application_credentials: Optional[str] = None
     
     # Redis/Queue Configuration
@@ -45,6 +47,11 @@ class Settings(BaseSettings):
     stripe_public_key: Optional[str] = None
     stripe_secret_key: Optional[str] = None
     stripe_webhook_secret: Optional[str] = None
+    
+    # Email Configuration (Resend)
+    resend_api_key: Optional[str] = None
+    from_email: Optional[str] = None
+    support_email: Optional[str] = None
     
     # File Storage
     max_file_size: int = 100 * 1024 * 1024  # 100MB
