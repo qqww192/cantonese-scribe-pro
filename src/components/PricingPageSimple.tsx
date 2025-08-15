@@ -1,55 +1,66 @@
-// src/components/PricingPage.tsx
-import React, { useState, useEffect } from 'react';
+/**
+ * Simple Pricing Page for CantoneseScribe
+ * Simplified version without complex dependencies
+ */
+
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePayments, SubscriptionPlan, Subscription } from '@/services/paymentService';
-import { APIError } from '@/services/api';
-import { useApiCall } from '@/hooks/useLoadingState';
-import { PricingPageSkeleton } from '@/components/skeletons/TranscriptionSkeleton';
 import { CheckCircle, Star, Loader2 } from 'lucide-react';
 
-export const PricingPage = () => {
+export const PricingPageSimple = () => {
   const [isAnnual, setIsAnnual] = useState(false);
   const [processingPlan, setProcessingPlan] = useState<string | null>(null);
   
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const { 
-    getSubscriptionPlans, 
-    getCurrentSubscription, 
-    createSubscription 
-  } = usePayments();
-  
-  // Loading states for plans and subscription
-  const plansState = useApiCall<SubscriptionPlan[]>([]);
-  const subscriptionState = useApiCall<Subscription | null>(null);
 
-  // Load subscription plans and current subscription
-  useEffect(() => {
-    const loadPlans = async () => {
-      await plansState.callApi(getSubscriptionPlans, {
-        errorMessage: 'Failed to load pricing plans'
-      });
-    };
-    
-    const loadSubscription = async () => {
-      if (isAuthenticated()) {
-        await subscriptionState.callApi(getCurrentSubscription, {
-          errorMessage: 'Failed to load subscription information'
-        });
-      }
-    };
-    
-    loadPlans();
-    loadSubscription();
-  }, [getSubscriptionPlans, getCurrentSubscription, isAuthenticated, plansState, subscriptionState]);
-  
+  // Static pricing plans
+  const plans = [
+    {
+      id: 'free',
+      name: 'Free',
+      description: 'Perfect for trying out CantoneseScribe',
+      price: 0,
+      currency: 'usd',
+      billing_period: 'monthly',
+      credits_included: 60,
+      features: [
+        '60 minutes per month',
+        'Basic transcription quality',
+        'Standard export formats',
+        'Community support'
+      ],
+      popular: false,
+      stripe_price_id: 'free'
+    },
+    {
+      id: 'pro',
+      name: 'Pro',
+      description: 'For serious Cantonese learners and content creators',
+      price: 999, // $9.99 in cents
+      currency: 'usd',
+      billing_period: 'monthly',
+      credits_included: 500,
+      features: [
+        '500 minutes per month',
+        'High-quality transcription',
+        'All export formats (SRT, VTT, CSV, JSON)',
+        'Yale + Jyutping romanization',
+        'English translations',
+        'Priority processing',
+        'Email support'
+      ],
+      popular: true,
+      stripe_price_id: 'price_1RwLYuICypWYw6CLcRdEWa8X'
+    }
+  ];
+
   // Handle subscription creation
-  const handleSubscribe = async (plan: SubscriptionPlan) => {
+  const handleSubscribe = async (plan: typeof plans[0]) => {
     if (!isAuthenticated()) {
       // Redirect to login with return URL
       navigate(`/auth?returnTo=${encodeURIComponent(window.location.pathname)}`);
@@ -65,22 +76,21 @@ export const PricingPage = () => {
     try {
       setProcessingPlan(plan.id);
       
-      // Create subscription and redirect to checkout
-      const { client_secret, subscription_id } = await createSubscription(
-        isAnnual ? plan.stripe_price_id + '_annual' : plan.stripe_price_id
-      );
+      // For now, simulate creating a subscription
+      // In a real implementation, this would call your payment service
+      setTimeout(() => {
+        // Simulate successful payment setup
+        navigate(`/checkout?subscription_id=sub_mock&client_secret=seti_mock_client_secret`);
+      }, 1000);
       
-      // Redirect to checkout page with client secret
-      navigate(`/checkout?subscription_id=${subscription_id}&client_secret=${client_secret}`);
     } catch (err) {
       console.error('Failed to create subscription:', err);
-      plansState.setError(err instanceof APIError ? err.message : 'Failed to create subscription');
       setProcessingPlan(null);
     }
   };
   
   // Format pricing display
-  const formatPrice = (plan: SubscriptionPlan) => {
+  const formatPrice = (plan: typeof plans[0]) => {
     if (plan.price === 0) return 'Free';
     
     const price = isAnnual && plan.billing_period === 'yearly' 
@@ -90,34 +100,14 @@ export const PricingPage = () => {
     return `$${(price / 100).toFixed(2)}`;
   };
   
-  // Check if plan is current subscription
-  const isCurrentPlan = (plan: SubscriptionPlan) => {
-    return subscriptionState.data?.plan?.id === plan.id;
-  };
-  
-  // Get current subscription for display
-  const currentSubscription = subscriptionState.data;
-  
   // Get button text
-  const getButtonText = (plan: SubscriptionPlan) => {
-    if (isCurrentPlan(plan)) {
-      return 'Current Plan';
-    }
-    
+  const getButtonText = (plan: typeof plans[0]) => {
     if (plan.price === 0) {
       return 'Start Free';
     }
     
-    return currentSubscription ? 'Switch Plan' : 'Subscribe';
+    return 'Subscribe';
   };
-  
-  // Show loading skeleton while data is loading
-  if (plansState.isLoading || (isAuthenticated() && subscriptionState.isLoading)) {
-    return <PricingPageSkeleton />;
-  }
-  
-  const plans = plansState.data || [];
-  const error = plansState.error || subscriptionState.error;
 
   return (
     <div className="min-h-screen bg-gray-50 py-16">
@@ -160,52 +150,15 @@ export const PricingPage = () => {
           </div>
         </div>
 
-        {/* Error display */}
-        {error && (
-          <Alert variant="destructive" className="mb-8 max-w-4xl mx-auto">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        
-        {/* Current subscription info */}
-        {currentSubscription && (
-          <div className="mb-8 max-w-4xl mx-auto">
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>
-                You are currently subscribed to {currentSubscription.plan.name}.
-                {currentSubscription.cancel_at_period_end && (
-                  <span className="ml-1 text-orange-600">
-                    Your subscription will end on {new Date(currentSubscription.current_period_end).toLocaleDateString()}.
-                  </span>
-                )}
-              </AlertDescription>
-            </Alert>
-          </div>
-        )}
-
         {/* Pricing Cards */}
         <div className="grid lg:grid-cols-2 gap-8 mb-16 max-w-4xl mx-auto">
-          {plans.length === 0 && !plansState.isLoading ? (
-            <div className="col-span-2 text-center py-12">
-              <p className="text-gray-500">No pricing plans available at this time.</p>
-              <button 
-                onClick={() => window.location.reload()} 
-                className="mt-4 text-orange-600 hover:text-orange-700"
-              >
-                Refresh page
-              </button>
-            </div>
-          ) : (
-            plans.map((plan, index) => (
+          {plans.map((plan, index) => (
             <Card 
               key={plan.id} 
               className={`relative ${
                 plan.popular 
                   ? 'ring-2 ring-orange-500 shadow-lg scale-105' 
-                  : isCurrentPlan(plan) 
-                    ? 'ring-2 ring-green-500 shadow-lg' 
-                    : ''
+                  : ''
               }`}
             >
               {plan.popular && (
@@ -213,15 +166,6 @@ export const PricingPage = () => {
                   <Badge className="bg-orange-500 text-white">
                     <Star className="h-3 w-3 mr-1" />
                     Most Popular
-                  </Badge>
-                </div>
-              )}
-              
-              {isCurrentPlan(plan) && (
-                <div className="absolute -top-4 right-4">
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Current
                   </Badge>
                 </div>
               )}
@@ -260,7 +204,7 @@ export const PricingPage = () => {
                 <Button 
                   className="w-full mb-6"
                   variant={plan.price === 0 ? 'outline' : 'default'}
-                  disabled={isCurrentPlan(plan) || processingPlan === plan.id}
+                  disabled={processingPlan === plan.id}
                   onClick={() => handleSubscribe(plan)}
                 >
                   {processingPlan === plan.id ? (
@@ -280,8 +224,7 @@ export const PricingPage = () => {
                 </ul>
               </CardContent>
             </Card>
-            ))
-          )}
+          ))}
         </div>
 
         {/* Credits Information */}
@@ -337,4 +280,4 @@ export const PricingPage = () => {
   );
 };
 
-export default PricingPage;
+export default PricingPageSimple;

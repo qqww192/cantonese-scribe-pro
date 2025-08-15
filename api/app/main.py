@@ -20,6 +20,8 @@ from .services.database_service import init_database
 from .services.google_speech_service import init_google_speech_service
 from .services.unified_transcription_service import init_unified_transcription_service
 from .middleware.error_handling import add_error_handlers
+from .middleware.usage_tracking import UsageTrackingMiddleware
+from .services.monthly_reset_service import monthly_reset_service
 
 
 @asynccontextmanager
@@ -60,10 +62,28 @@ async def lifespan(app: FastAPI):
         if get_settings().environment == "production":
             raise
     
+    # Start monthly reset scheduler
+    try:
+        monthly_reset_service.start_scheduler()
+        logging.info("Monthly reset scheduler started successfully")
+    except Exception as e:
+        logging.error(f"Failed to start monthly reset scheduler: {str(e)}")
+        # Don't fail startup for scheduler issues
+        if get_settings().environment == "production":
+            logging.warning("Monthly reset scheduler failed to start in production")
+    
     yield
     
     # Shutdown
     logging.info("CantoneseScribe backend shutting down...")
+    
+    # Stop monthly reset scheduler
+    try:
+        monthly_reset_service.stop_scheduler()
+        logging.info("Monthly reset scheduler stopped")
+    except Exception as e:
+        logging.error(f"Error stopping monthly reset scheduler: {str(e)}")
+    
     # Clean up any temporary files
     await cleanup_temp_files()
 
@@ -96,6 +116,12 @@ def create_application() -> FastAPI:
             TrustedHostMiddleware,
             allowed_hosts=settings.allowed_hosts
         )
+    
+    # Usage tracking middleware (should be added before API routes)
+    app.add_middleware(
+        UsageTrackingMiddleware,
+        enable_enforcement=settings.environment != "development"  # Disable enforcement in dev
+    )
     
     # Include API router
     app.include_router(api_router)

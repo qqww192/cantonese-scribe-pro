@@ -54,6 +54,7 @@ class TranscriptionResponse(BaseModel):
     job_id: str
     status: JobStatus
     message: str
+    usage_info: Optional[Dict[str, Any]] = None
 
 
 class TranscriptionItem(BaseModel):
@@ -92,6 +93,7 @@ class TranscriptionJob(BaseModel):
     result: Optional[TranscriptionResult] = None
     cost: Optional[float] = None
     duration: Optional[float] = None
+    usage_info: Optional[Dict[str, Any]] = None
 
 
 class ExportOptions(BaseModel):

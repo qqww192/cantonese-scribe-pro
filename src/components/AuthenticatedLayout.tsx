@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import UsageWidget from './UsageWidget';
+import { useUsageMockData } from '@/services/usageMockData';
+import { UsageData } from '@/types/usage';
 import { 
   LogOut, 
   BarChart3, 
@@ -18,6 +21,23 @@ const AuthenticatedLayout = () => {
   const [activeTab, setActiveTab] = useState('process');
   const [url, setUrl] = useState('');
   const [isValidating, setIsValidating] = useState(false);
+  const [usageData, setUsageData] = useState<UsageData | null>(null);
+  
+  const mockUsageData = useUsageMockData();
+  
+  React.useEffect(() => {
+    // Load usage data for the header widget
+    const loadUsageData = async () => {
+      try {
+        const usage = mockUsageData.generateUsageData();
+        setUsageData(usage);
+      } catch (error) {
+        console.error('Failed to load usage data:', error);
+      }
+    };
+    
+    loadUsageData();
+  }, [mockUsageData]);
 
   // Mock user data
   const user = {
@@ -351,6 +371,15 @@ const AuthenticatedLayout = () => {
 
             {/* User Actions */}
             <div className="flex items-center gap-4">
+              {/* Usage Widget */}
+              {usageData && (
+                <UsageWidget 
+                  usage={usageData}
+                  compact={true}
+                  onClick={() => setActiveTab('usage')}
+                />
+              )}
+              
               <span className="text-sm text-gray-600">Welcome, {user.name}</span>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="w-4 h-4 mr-2" />

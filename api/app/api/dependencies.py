@@ -135,3 +135,22 @@ async def get_current_user_with_cost_check(
     user = await get_current_user(credentials, db)
     await check_daily_cost_limit(user["id"], db)
     return user
+
+
+async def get_current_admin_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: DatabaseService = Depends(get_database)
+) -> Dict[str, Any]:
+    """Get current user and verify admin permissions."""
+    user = await get_current_user(credentials, db)
+    
+    # Check if user has admin role (this would be based on your user model)
+    is_admin = user.get("is_admin", False) or user.get("role") == "admin"
+    
+    if not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required"
+        )
+    
+    return user

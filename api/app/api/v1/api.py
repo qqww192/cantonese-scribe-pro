@@ -4,7 +4,7 @@ Main API router that includes all endpoint routers.
 
 from fastapi import APIRouter
 
-from .endpoints import auth, transcription, files, users, progress, billing, health
+from .endpoints import auth, transcription, files, users, progress, billing, health, payments, waitlist, usage
 
 api_router = APIRouter()
 
@@ -15,4 +15,7 @@ api_router.include_router(files.router, prefix="/files", tags=["files"])
 api_router.include_router(transcription.router, prefix="/transcription", tags=["transcription"])
 api_router.include_router(progress.router, prefix="/progress", tags=["progress"])
 api_router.include_router(billing.router, prefix="/billing", tags=["billing"])
+api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
+api_router.include_router(waitlist.router, prefix="/waitlist", tags=["waitlist"])
+api_router.include_router(usage.router, prefix="/usage", tags=["usage"])
 api_router.include_router(health.router, prefix="/health", tags=["health"])

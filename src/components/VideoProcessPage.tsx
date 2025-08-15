@@ -29,6 +29,10 @@ import { useFeedback } from '@/services/feedbackService';
 import VirtualizedTranscriptionViewer from './VirtualizedTranscriptionViewer';
 import DownloadProgressIndicator from './DownloadProgressIndicator';
 import FeedbackRatingSystem from './FeedbackRatingSystem';
+import UsageWarning from './UsageWarning';
+import LimitReachedScreen from './LimitReachedScreen';
+import { useUsageMockData } from '@/services/usageMockData';
+import { UsageData } from '@/types/usage';
 
 interface ProcessingState {
   isProcessing: boolean;
@@ -50,6 +54,8 @@ const VideoProcessPage = () => {
   });
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [usageData, setUsageData] = useState<UsageData | null>(null);
+  const [showLimitScreen, setShowLimitScreen] = useState(false);
   
   // Services
   const {
@@ -76,6 +82,7 @@ const VideoProcessPage = () => {
   const { user } = useAuth();
   const { activeDownloads, downloadGenerated, cancelDownload, cancelAllDownloads } = useDownload();
   const { submitFeedback } = useFeedback();
+  const mockUsageData = useUsageMockData();
   
   // Refs for cleanup
   const wsUnsubscribe = useRef<(() => void) | null>(null);
@@ -88,6 +95,26 @@ const VideoProcessPage = () => {
       }
     };
   }, []);
+
+  // Load usage data on component mount
+  useEffect(() => {
+    loadUsageData();
+  }, []);
+
+  const loadUsageData = async () => {
+    try {
+      // Simulate API call - in production this would fetch real usage data
+      const usage = mockUsageData.generateUsageData();
+      setUsageData(usage);
+      
+      // Check if user has hit their limit
+      if (usage.isAtLimit) {
+        setShowLimitScreen(true);
+      }
+    } catch (error) {
+      console.error('Failed to load usage data:', error);
+    }
+  };
 
   // Get URL from query params on page load
   useEffect(() => {
@@ -128,6 +155,12 @@ const VideoProcessPage = () => {
     
     setError(null);
     
+    // Check usage limits before processing
+    if (usageData?.isAtLimit) {
+      setShowLimitScreen(true);
+      return;
+    }
+    
     // Validate YouTube URL
     const validation = validateYouTubeURL(url);
     if (!validation.isValid) {
@@ -144,6 +177,12 @@ const VideoProcessPage = () => {
     
     const file = files[0];
     setError(null);
+    
+    // Check usage limits before processing
+    if (usageData?.isAtLimit) {
+      setShowLimitScreen(true);
+      return;
+    }
     
     // Validate file
     const validation = validateFile(file);
@@ -393,6 +432,19 @@ const VideoProcessPage = () => {
     disabled: processingState.isProcessing
   });
 
+  // Show limit reached screen if user is at limit
+  if (showLimitScreen && usageData?.isAtLimit) {
+    return (
+      <LimitReachedScreen 
+        usage={usageData}
+        onRefresh={loadUsageData}
+        allowOverride={false}
+        showPlans={true}
+        showWaitlist={true}
+      />
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="space-y-6">
@@ -401,12 +453,22 @@ const VideoProcessPage = () => {
           <p className="text-gray-600 mt-2">
             Process your Cantonese videos and audio files for accurate transcriptions
           </p>
-          {user && (
+          {usageData && (
             <p className="text-sm text-gray-500 mt-1">
-              Credits remaining: {user.usage_quota - user.usage_count}
+              Credits remaining: {usageData.creditsTotal - usageData.creditsUsed} / {usageData.creditsTotal}
             </p>
           )}
         </div>
+        
+        {/* Usage Warning */}
+        {usageData && (usageData.isNearLimit || usageData.isAtLimit) && !showLimitScreen && (
+          <UsageWarning 
+            usage={usageData}
+            variant="banner"
+            showProgress={true}
+            onActionClick={() => window.location.href = '/waitlist'}
+          />
+        )}
         
         {/* Error display */}
         {error && (

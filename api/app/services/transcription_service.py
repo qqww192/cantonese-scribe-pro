@@ -7,17 +7,20 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Dict, Any
+from uuid import UUID
 import json
 
 from ..schemas.transcription import (
     TranscriptionJob, TranscriptionOptions, JobStatus,
     TranscriptionResult, TranscriptionItem, ExportFormat
 )
+from ..schemas.usage import UsageType
 from ..services.audio_service import audio_service
 from ..services.whisper_service import whisper_service
 from ..services.romanization_service import romanization_service
 from ..services.translation_service import translation_service
 from ..services.export_service import export_service
+from ..services.usage_service import usage_service
 from ..core.storage import file_manager
 from ..core.logging import get_logger
 from ..core.exceptions import ProcessingError
@@ -39,7 +42,9 @@ class TranscriptionService:
         user_id: str,
         file_id: Optional[str] = None,
         youtube_url: Optional[str] = None,
-        options: Optional[TranscriptionOptions] = None
+        options: Optional[TranscriptionOptions] = None,
+        estimated_credits: Optional[int] = None,
+        estimated_cost: Optional[float] = None
     ) -> TranscriptionJob:
         """Create a new transcription job."""
         job_id = str(uuid.uuid4())
@@ -65,12 +70,22 @@ class TranscriptionService:
         logger.info(f"Created transcription job: {job_id}")
         return job
     
-    async def process_job(self, job_id: str) -> None:
-        """Process a transcription job through the complete pipeline."""
+    async def process_job(self, job_id: str, user_id: Optional[UUID] = None) -> None:
+        """Process a transcription job through the complete pipeline with usage tracking."""
         job = self.jobs.get(job_id)
         if not job:
             logger.error(f"Job not found: {job_id}")
             return
+        
+        # Convert user_id if provided as string
+        if user_id and isinstance(user_id, str):
+            user_id = UUID(user_id)
+        elif not user_id:
+            user_id = UUID(job.user_id)
+        
+        initial_usage_recorded = False
+        actual_duration = 0
+        actual_cost = 0.0
         
         try:
             job.status = JobStatus.PROCESSING
@@ -83,30 +98,53 @@ class TranscriptionService:
             audio_path = await self._get_audio_file(job)
             job.progress = 0.2
             
-            # Step 2: Extract audio metadata
+            # Step 2: Extract audio metadata and get actual duration
             metadata = await audio_service.get_audio_metadata(audio_path)
-            job.duration = metadata.get("duration", 0)
+            actual_duration = metadata.get("duration", 0)
+            job.duration = actual_duration
             job.progress = 0.3
             
-            # Step 3: Transcribe with Whisper
+            # Step 3: Calculate actual cost and usage (now that we have real duration)
+            actual_cost = self._calculate_cost(actual_duration)
+            actual_credits = max(1, (actual_duration + 59) // 60)  # 1 credit per minute, minimum 1
+            
+            # Record actual usage (replace the initial estimate)
+            try:
+                await usage_service.record_usage(
+                    user_id=user_id,
+                    usage_type=UsageType.TRANSCRIPTION,
+                    duration_seconds=int(actual_duration),
+                    file_size_bytes=metadata.get("file_size", 0),
+                    cost=actual_cost,
+                    transcription_id=UUID(job_id)
+                )
+                initial_usage_recorded = True
+                logger.info(f"Recorded actual usage for job {job_id}: {actual_credits} credits, {actual_duration}s duration")
+            except Exception as usage_error:
+                logger.error(f"Failed to record usage for job {job_id}: {str(usage_error)}")
+                # Continue processing even if usage recording fails
+            
+            # Step 4: Transcribe with Whisper
             whisper_result = await whisper_service.transcribe(
                 audio_path, 
                 language="zh"
             )
             job.progress = 0.6
             
-            # Step 4: Process transcription segments
+            # Step 5: Process transcription segments
             segments = await self._process_segments(whisper_result, job.options)
             job.progress = 0.9
             
-            # Step 5: Create final result
+            # Step 6: Create final result
             result = TranscriptionResult(
                 items=segments,
                 metadata={
                     "duration": job.duration,
                     "language": job.options.language,
                     "segments_count": len(segments),
-                    "processing_time": self._calculate_processing_time(job)
+                    "processing_time": self._calculate_processing_time(job),
+                    "actual_cost": actual_cost,
+                    "actual_credits": actual_credits
                 },
                 statistics={
                     "average_confidence": sum(s.confidence for s in segments) / len(segments) if segments else 0,
@@ -119,20 +157,37 @@ class TranscriptionService:
             job.status = JobStatus.COMPLETED
             job.completed_at = datetime.utcnow().isoformat()
             job.progress = 1.0
+            job.cost = actual_cost
             
-            # Calculate cost
-            job.cost = self._calculate_cost(job.duration)
+            # Add usage info to job
+            current_usage = await usage_service.get_current_usage(user_id)
+            job.usage_info = {
+                "credits_used": actual_credits,
+                "actual_duration_seconds": int(actual_duration),
+                "actual_cost": actual_cost,
+                "credits_remaining": current_usage.credits_total - current_usage.credits_used,
+                "billing_period": current_usage.current_month
+            }
             
             # Save result to file
             await self._save_job_result(job)
             
-            logger.info(f"Completed transcription job: {job_id}")
+            logger.info(f"Completed transcription job: {job_id}, duration: {actual_duration}s, cost: ${actual_cost:.4f}")
             
         except Exception as e:
             logger.error(f"Error processing job {job_id}: {str(e)}")
             job.status = JobStatus.FAILED
             job.error_message = str(e)
             job.completed_at = datetime.utcnow().isoformat()
+            
+            # Handle usage refund for failed processing
+            if initial_usage_recorded:
+                try:
+                    # Note: In a real implementation, you might want to implement a refund mechanism
+                    # For now, we log the failure but the usage has already been recorded
+                    logger.warning(f"Processing failed for job {job_id} after usage was recorded. Actual duration: {actual_duration}s")
+                except Exception as refund_error:
+                    logger.error(f"Failed to handle usage refund for job {job_id}: {str(refund_error)}")
         
         finally:
             # Clean up active job tracking
@@ -323,6 +378,64 @@ class TranscriptionService:
     ) -> Optional[Path]:
         """Get path to exported file."""
         return await export_service.get_export_file_path(job_id, user_id, format)
+    
+    async def get_file_info(
+        self,
+        file_id: Optional[str] = None,
+        youtube_url: Optional[str] = None,
+        user_id: Optional[UUID] = None
+    ) -> Dict[str, Any]:
+        """
+        Get file information for usage estimation.
+        Returns file size and estimated duration for usage limit checks.
+        """
+        try:
+            if file_id:
+                # Get uploaded file info
+                file_path = await file_manager.get_file_path(file_id, str(user_id))
+                if not file_path or not file_path.exists():
+                    raise ProcessingError(f"File not found: {file_id}")
+                
+                file_size = file_path.stat().st_size
+                
+                # Get audio metadata for more accurate duration
+                try:
+                    metadata = await audio_service.get_audio_metadata(file_path)
+                    estimated_duration = metadata.get("duration", 0)
+                except Exception as e:
+                    logger.warning(f"Could not get audio metadata for {file_id}: {str(e)}")
+                    # Fallback estimation: 1MB = 1 minute for audio files
+                    estimated_duration = int((file_size / (1024 * 1024)) * 60)
+                
+                return {
+                    "file_size": file_size,
+                    "estimated_duration": estimated_duration,
+                    "file_type": "uploaded",
+                    "file_id": file_id
+                }
+                
+            elif youtube_url:
+                # For YouTube URLs, we need to estimate before downloading
+                # This is a rough estimation - actual size/duration will be known after download
+                return {
+                    "file_size": 50 * 1024 * 1024,  # Estimate 50MB average
+                    "estimated_duration": 600,  # Estimate 10 minutes average
+                    "file_type": "youtube",
+                    "youtube_url": youtube_url
+                }
+            
+            else:
+                raise ProcessingError("No input source specified")
+                
+        except Exception as e:
+            logger.error(f"Error getting file info: {str(e)}")
+            # Return safe defaults if we can't get file info
+            return {
+                "file_size": 10 * 1024 * 1024,  # 10MB default
+                "estimated_duration": 300,  # 5 minutes default
+                "file_type": "unknown",
+                "error": str(e)
+            }
 
 
 # Global service instance

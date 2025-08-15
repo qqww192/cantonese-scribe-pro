@@ -5,13 +5,15 @@ import { HeroSection } from '@/components/HeroSection';
 import { HowItWorks } from '@/components/HowItWorks';
 import { Features } from '@/components/Features';
 import { Footer } from '@/components/Footer';
-import PricingPage from '@/components/PricingPage';
+import PricingPageMVP from '@/components/PricingPageMVP';
 import LoginPage from '@/components/LoginPage';
 import HistoryPage from '@/components/HistoryPage';
 import SettingsPage from '@/components/SettingsPage';
 import UsagePage from '@/components/UsagePage';
 import VideoProcessPage from '@/components/VideoProcessPage';
 import CheckoutPage from '@/components/CheckoutPage';
+import PaymentSuccessPage from '@/components/PaymentSuccessPage';
+import StripeProvider from '@/components/StripeProvider';
 import OnboardingFlow, { useOnboarding } from '@/components/OnboardingFlow';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -68,22 +70,23 @@ function App() {
   const shouldShowOnboarding = isAuthenticated() && !hasCompletedOnboarding;
 
   return (
-    <Router>
-      {shouldShowOnboarding && (
-        <OnboardingFlow
-          onComplete={completeOnboarding}
-          onSkip={completeOnboarding}
-        />
-      )}
-      
-      <Routes>
+    <StripeProvider>
+      <Router>
+        {shouldShowOnboarding && (
+          <OnboardingFlow
+            onComplete={completeOnboarding}
+            onSkip={completeOnboarding}
+          />
+        )}
+        
+        <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         
         <Route path="/pricing" element={
           <div className="min-h-screen bg-gray-50">
             <Header />
-            <PricingPage />
+            <PricingPageMVP />
             <Footer />
           </div>
         } />
@@ -95,6 +98,12 @@ function App() {
             <div className="min-h-screen bg-gray-50">
               <CheckoutPage />
             </div>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/payments/success" element={
+          <ProtectedRoute>
+            <PaymentSuccessPage />
           </ProtectedRoute>
         } />
 
@@ -142,7 +151,8 @@ function App() {
         {/* Catch all route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Router>
+      </Router>
+    </StripeProvider>
   );
 }
 

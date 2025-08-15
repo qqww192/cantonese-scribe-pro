@@ -3,7 +3,7 @@ File-related Pydantic schemas.
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any
 from pydantic import BaseModel, validator
 
 
@@ -15,6 +15,7 @@ class FileUploadResponse(BaseModel):
     file_type: str
     upload_time: str
     message: str
+    usage_info: Optional[Dict[str, Any]] = None
 
 
 class FileMetadata(BaseModel):

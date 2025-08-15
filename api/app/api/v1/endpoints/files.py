@@ -3,12 +3,15 @@ File management endpoints.
 """
 
 from typing import List
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, BackgroundTasks
+from uuid import UUID
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, BackgroundTasks, status
 from fastapi.responses import FileResponse
 
 from ....core.storage import file_manager
 from ....core.exceptions import FileError
 from ....schemas.files import FileUploadResponse, FileMetadata, StorageUsage
+from ....schemas.usage import UsageCheckRequest
+from ....services.usage_service import usage_service
 from ...dependencies import get_current_user
 from ....core.logging import get_logger
 
@@ -26,9 +29,18 @@ async def upload_file(
     Upload a file for processing.
     
     Supports audio and video files for transcription.
-    Maximum file size: 100MB
+    Validates usage limits before allowing upload.
     """
     try:
+        user_id = UUID(current_user["sub"])
+        
+        # Read file size first
+        file_content = await file.read()
+        file_size_bytes = len(file_content)
+        
+        # Reset file position
+        await file.seek(0)
+        
         # Validate file type
         allowed_types = {
             'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/aac',
@@ -41,16 +53,52 @@ async def upload_file(
         # Determine file type
         file_type = "audio" if file.content_type.startswith("audio") else "video"
         
-        # Save the file
+        # Estimate duration (rough estimate: 1MB = 1 minute for audio, 0.5 minute for video)
+        if file_type == "audio":
+            estimated_duration_seconds = int((file_size_bytes / (1024 * 1024)) * 60)
+        else:
+            estimated_duration_seconds = int((file_size_bytes / (1024 * 1024)) * 30)
+        
+        # Check usage limits before proceeding with upload
+        usage_check = await usage_service.check_usage_limits(
+            user_id=user_id,
+            estimated_duration_seconds=estimated_duration_seconds,
+            file_size_bytes=file_size_bytes
+        )
+        
+        # Block upload if user exceeds limits
+        if not usage_check.can_process:
+            logger.warning(f"Upload blocked for user {user_id}: {usage_check.blocking_reason}")
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail={
+                    "error": "Upload not allowed",
+                    "reason": usage_check.blocking_reason,
+                    "file_size_mb": round(file_size_bytes / (1024 * 1024), 2),
+                    "estimated_duration_minutes": round(estimated_duration_seconds / 60, 1),
+                    "credits_required": usage_check.credits_required,
+                    "credits_available": usage_check.credits_available,
+                    "upgrade_url": "/pricing",
+                    "usage_check": usage_check.dict()
+                }
+            )
+        
+        # Show warnings if any (e.g., approaching limit)
+        if usage_check.warnings:
+            logger.info(f"Upload warnings for user {user_id}: {usage_check.warnings}")
+        
+        # Save the file (reset to original content)
+        await file.seek(0)
         metadata = await file_manager.save_upload_file(
             file, 
             current_user["user_id"], 
             file_type
         )
         
-        logger.info(f"File uploaded: {metadata['file_id']} by user {current_user['user_id']}")
+        logger.info(f"File uploaded: {metadata['file_id']} by user {user_id}, estimated duration: {estimated_duration_seconds}s")
         
-        return FileUploadResponse(
+        # Include usage information in response
+        response = FileUploadResponse(
             file_id=metadata["file_id"],
             filename=metadata["original_filename"],
             file_size=metadata["file_size"],
@@ -59,6 +107,20 @@ async def upload_file(
             message="File uploaded successfully"
         )
         
+        # Add usage info to response
+        response.usage_info = {
+            "estimated_duration_seconds": estimated_duration_seconds,
+            "estimated_duration_minutes": round(estimated_duration_seconds / 60, 1),
+            "estimated_credits": usage_check.credits_required,
+            "estimated_cost": float(usage_check.estimated_cost),
+            "warnings": usage_check.warnings,
+            "credits_remaining_after": usage_check.credits_after
+        }
+        
+        return response
+        
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions (like usage limits)
     except FileError:
         raise
     except Exception as e:
