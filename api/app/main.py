@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
     logging.info("CantoneseScribe backend starting up...")
     
     # Ensure required directories exist
-    from core.storage import ensure_directories
+    from .core.storage import ensure_directories
     ensure_directories()
     
     # Initialize database connection
@@ -130,13 +130,13 @@ def create_application() -> FastAPI:
     # Add comprehensive error handling
     add_error_handlers(app)
     
-    # Health check endpoint
-    @app.get("/health")
+    # Health check endpoint (under API prefix)
+    @app.get(f"{settings.api_prefix}/health")
     async def health_check():
         return {"status": "healthy", "version": "1.0.0"}
     
-    # Debug endpoint to test API connectivity
-    @app.get("/debug")
+    # Debug endpoint to test API connectivity (under API prefix)
+    @app.get(f"{settings.api_prefix}/debug")
     async def debug_info():
         return {
             "status": "ok",

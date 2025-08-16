@@ -3,8 +3,18 @@ Main API router that includes all endpoint routers.
 """
 
 from fastapi import APIRouter
-
-from .endpoints import auth, transcription, files, users, progress, billing, health, payments, waitlist, usage
+from .endpoints import (
+    auth,
+    transcription,
+    files,
+    users,
+    progress,
+    billing,
+    health,
+    payments,
+    waitlist,
+    usage,
+    signup, 
 
 api_router = APIRouter()
 
@@ -19,3 +29,4 @@ api_router.include_router(payments.router, prefix="/payments", tags=["payments"]
 api_router.include_router(waitlist.router, prefix="/waitlist", tags=["waitlist"])
 api_router.include_router(usage.router, prefix="/usage", tags=["usage"])
 api_router.include_router(health.router, prefix="/health", tags=["health"])
+api_router.include_router(signup.router, prefix="/waitlist", tags=["waitlist"])  # Mounts /waitlist/signup
